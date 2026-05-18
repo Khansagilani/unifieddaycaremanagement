@@ -19,6 +19,8 @@ from app.utils.response import success_response, error_response
 router = APIRouter(prefix="/api/health", tags=["health"])
 
 # Health profile
+
+
 @router.put("/{child_id}/profile", response_model=dict)
 def update_health_profile(
     child_id: int,
@@ -26,10 +28,12 @@ def update_health_profile(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    profile = HealthService.update_health_profile(db, child_id, current_user.center_id, health_data)
+    profile = HealthService.update_health_profile(
+        db, child_id, current_user.center_id, health_data)
     if not profile:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(HealthProfileResponse.from_orm(profile), "Health profile updated")
+
 
 @router.get("/{child_id}/profile", response_model=dict)
 def get_health_profile(
@@ -37,12 +41,15 @@ def get_health_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    profile = HealthService.get_or_create_health_profile(db, child_id, current_user.center_id)
+    profile = HealthService.get_or_create_health_profile(
+        db, child_id, current_user.center_id)
     if not profile:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(HealthProfileResponse.from_orm(profile))
 
 # Medications
+
+
 @router.post("/{child_id}/medications", response_model=dict)
 def add_medication(
     child_id: int,
@@ -50,10 +57,12 @@ def add_medication(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    medication = HealthService.add_medication(db, child_id, current_user.center_id, med_data)
+    medication = HealthService.add_medication(
+        db, child_id, current_user.center_id, med_data)
     if not medication:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(MedicationResponse.from_orm(medication), "Medication added")
+
 
 @router.get("/{child_id}/medications", response_model=dict)
 def get_medications(
@@ -62,8 +71,10 @@ def get_medications(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    medications = HealthService.get_medications(db, child_id, current_user.center_id, active)
+    medications = HealthService.get_medications(
+        db, child_id, current_user.center_id, active)
     return success_response([MedicationResponse.from_orm(m) for m in medications])
+
 
 @router.post("/{child_id}/medications/logs", response_model=dict)
 def log_medication(
@@ -72,12 +83,15 @@ def log_medication(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    medication_log = HealthService.log_medication(db, child_id, current_user.center_id, med_log_data)
+    medication_log = HealthService.log_medication(
+        db, child_id, current_user.center_id, med_log_data)
     if not medication_log:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(MedicationLogResponse.from_orm(medication_log), "Medication logged")
 
 # Vaccinations
+
+
 @router.post("/{child_id}/vaccinations", response_model=dict)
 def add_vaccination(
     child_id: int,
@@ -85,10 +99,12 @@ def add_vaccination(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    vaccination = HealthService.add_vaccination(db, child_id, current_user.center_id, vax_data)
+    vaccination = HealthService.add_vaccination(
+        db, child_id, current_user.center_id, vax_data)
     if not vaccination:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(VaccinationResponse.from_orm(vaccination), "Vaccination added")
+
 
 @router.get("/{child_id}/vaccinations", response_model=dict)
 def get_vaccinations(
@@ -96,10 +112,13 @@ def get_vaccinations(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    vaccinations = HealthService.get_vaccinations(db, child_id, current_user.center_id)
+    vaccinations = HealthService.get_vaccinations(
+        db, child_id, current_user.center_id)
     return success_response([VaccinationResponse.from_orm(v) for v in vaccinations])
 
 # Incident reports
+
+
 @router.post("/{child_id}/incidents", response_model=dict)
 def create_incident(
     child_id: int,
@@ -107,10 +126,12 @@ def create_incident(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    incident = HealthService.create_incident_report(db, child_id, current_user.center_id, incident_data)
+    incident = HealthService.create_incident_report(
+        db, child_id, current_user.center_id, incident_data)
     if not incident:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(IncidentReportResponse.from_orm(incident), "Incident created")
+
 
 @router.get("/{child_id}/incidents", response_model=dict)
 def get_incidents(
@@ -118,20 +139,25 @@ def get_incidents(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    incidents = HealthService.get_incident_reports(db, child_id, current_user.center_id)
+    incidents = HealthService.get_incident_reports(
+        db, child_id, current_user.center_id)
     return success_response([IncidentReportResponse.from_orm(i) for i in incidents])
 
 # Daily logs
+
+
 @router.post("/daily-logs", response_model=dict)
 def create_daily_log(
     log_data: DailyLogCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    daily_log = DailyLogService.get_or_create_daily_log(db, log_data.child_id, current_user.center_id, current_user.id, log_data.log_date)
+    daily_log = DailyLogService.get_or_create_daily_log(
+        db, log_data.child_id, current_user.center_id, current_user.id, log_data.log_date)
     if not daily_log:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(DailyLogResponse.from_orm(daily_log), "Daily log created")
+
 
 @router.put("/daily-logs/{child_id}/{log_date}", response_model=dict)
 def update_daily_log(
@@ -141,10 +167,12 @@ def update_daily_log(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    daily_log = DailyLogService.update_daily_log(db, child_id, current_user.center_id, log_date, log_data)
+    daily_log = DailyLogService.update_daily_log(
+        db, child_id, current_user.center_id, log_date, log_data)
     if not daily_log:
         return error_response("DAILY_LOG_NOT_FOUND", "Daily log not found")
     return success_response(DailyLogResponse.from_orm(daily_log), "Daily log updated")
+
 
 @router.get("/daily-logs/{child_id}", response_model=dict)
 def get_daily_logs(
@@ -154,8 +182,10 @@ def get_daily_logs(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    daily_logs = DailyLogService.get_daily_logs(db, child_id, current_user.center_id, start_date, end_date)
+    daily_logs = DailyLogService.get_daily_logs(
+        db, child_id, current_user.center_id, start_date, end_date)
     return success_response([DailyLogResponse.from_orm(dl) for dl in daily_logs])
+
 
 @router.get("/daily-logs/{child_id}/{log_date}", response_model=dict)
 def get_daily_log(
@@ -164,12 +194,15 @@ def get_daily_log(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    daily_log = DailyLogService.get_daily_log(db, child_id, current_user.center_id, log_date)
+    daily_log = DailyLogService.get_daily_log(
+        db, child_id, current_user.center_id, log_date)
     if not daily_log:
         return error_response("DAILY_LOG_NOT_FOUND", "Daily log not found")
     return success_response(DailyLogDetailResponse.from_orm(daily_log))
 
 # Nap records
+
+
 @router.post("/daily-logs/{child_id}/{log_date}/naps", response_model=dict)
 def add_nap_record(
     child_id: int,
@@ -178,12 +211,15 @@ def add_nap_record(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    nap = DailyLogService.add_nap_record(db, child_id, current_user.center_id, log_date, current_user.id, nap_data)
+    nap = DailyLogService.add_nap_record(
+        db, child_id, current_user.center_id, log_date, current_user.id, nap_data)
     if not nap:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(NapRecordResponse.from_orm(nap), "Nap record added")
 
 # Activity logs
+
+
 @router.post("/daily-logs/{child_id}/{log_date}/activities", response_model=dict)
 def add_activity_log(
     child_id: int,
@@ -192,12 +228,15 @@ def add_activity_log(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    activity = DailyLogService.add_activity_log(db, child_id, current_user.center_id, log_date, current_user.id, activity_data)
+    activity = DailyLogService.add_activity_log(
+        db, child_id, current_user.center_id, log_date, current_user.id, activity_data)
     if not activity:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(ActivityLogResponse.from_orm(activity), "Activity log added")
 
 # Meal logs
+
+
 @router.post("/daily-logs/{child_id}/{log_date}/meals", response_model=dict)
 def add_meal_log(
     child_id: int,
@@ -206,12 +245,15 @@ def add_meal_log(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    meal = DailyLogService.add_meal_log(db, child_id, current_user.center_id, log_date, current_user.id, meal_data)
+    meal = DailyLogService.add_meal_log(
+        db, child_id, current_user.center_id, log_date, current_user.id, meal_data)
     if not meal:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(MealLogResponse.from_orm(meal), "Meal log added")
 
 # Diaper logs
+
+
 @router.post("/daily-logs/{child_id}/{log_date}/diapers", response_model=dict)
 def add_diaper_log(
     child_id: int,
@@ -220,12 +262,15 @@ def add_diaper_log(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    diaper = DailyLogService.add_diaper_log(db, child_id, current_user.center_id, log_date, current_user.id, diaper_data)
+    diaper = DailyLogService.add_diaper_log(
+        db, child_id, current_user.center_id, log_date, current_user.id, diaper_data)
     if not diaper:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(DiaperLogResponse.from_orm(diaper), "Diaper log added")
 
 # Potty logs
+
+
 @router.post("/daily-logs/{child_id}/{log_date}/potty", response_model=dict)
 def add_potty_log(
     child_id: int,
@@ -234,22 +279,27 @@ def add_potty_log(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    potty = DailyLogService.add_potty_log(db, child_id, current_user.center_id, log_date, current_user.id, potty_data)
+    potty = DailyLogService.add_potty_log(
+        db, child_id, current_user.center_id, log_date, current_user.id, potty_data)
     if not potty:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(PottyLogResponse.from_orm(potty), "Potty log added")
 
 # Attendance
+
+
 @router.post("/attendance/check-in", response_model=dict)
 def check_in(
     checkin_data: CheckInRequest,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    attendance = AttendanceService.check_in(db, checkin_data.child_id, current_user.center_id, checkin_data, current_user.id)
+    attendance = AttendanceService.check_in(
+        db, checkin_data.child_id, current_user.center_id, checkin_data, current_user.id)
     if not attendance:
         return error_response("CHILD_NOT_FOUND", "Child not found")
     return success_response(AttendanceResponse.from_orm(attendance), "Checked in successfully")
+
 
 @router.post("/attendance/check-out", response_model=dict)
 def check_out(
@@ -257,10 +307,12 @@ def check_out(
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    attendance = AttendanceService.check_out(db, checkout_data.child_id, current_user.center_id, checkout_data)
+    attendance = AttendanceService.check_out(
+        db, checkout_data.child_id, current_user.center_id, checkout_data)
     if not attendance:
         return error_response("ATTENDANCE_NOT_FOUND", "Attendance record not found")
     return success_response(AttendanceResponse.from_orm(attendance), "Checked out successfully")
+
 
 @router.get("/attendance/{child_id}", response_model=dict)
 def get_attendance(
@@ -270,8 +322,10 @@ def get_attendance(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    attendance = AttendanceService.get_attendance(db, child_id, current_user.center_id, start_date, end_date)
+    attendance = AttendanceService.get_attendance(
+        db, child_id, current_user.center_id, start_date, end_date)
     return success_response([AttendanceResponse.from_orm(a) for a in attendance])
+
 
 @router.get("/attendance/{child_id}/today", response_model=dict)
 def get_today_attendance(
@@ -279,7 +333,8 @@ def get_today_attendance(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    attendance = AttendanceService.get_today_attendance(db, child_id, current_user.center_id)
+    attendance = AttendanceService.get_today_attendance(
+        db, child_id, current_user.center_id)
     if not attendance:
         return success_response(None, "No attendance for today")
     return success_response(AttendanceResponse.from_orm(attendance))

@@ -16,8 +16,9 @@ from app.schemas.health_and_daily import (
     CheckInRequest, CheckOutRequest
 )
 
+
 class HealthService:
-    
+
     # Health Profile
     @staticmethod
     def get_or_create_health_profile(db: Session, child_id: int, center_id: int) -> Optional[HealthProfile]:
@@ -27,23 +28,24 @@ class HealthService:
         ).first()
         if not child:
             return None
-        
+
         profile = db.query(HealthProfile).filter_by(child_id=child_id).first()
         if not profile:
             profile = HealthProfile(child_id=child_id)
             db.add(profile)
             db.commit()
             db.refresh(profile)
-        
+
         return profile
-    
+
     @staticmethod
     def update_health_profile(db: Session, child_id: int, center_id: int, health_data: HealthProfileCreate) -> Optional[HealthProfile]:
         """Update health profile"""
-        profile = HealthService.get_or_create_health_profile(db, child_id, center_id)
+        profile = HealthService.get_or_create_health_profile(
+            db, child_id, center_id)
         if not profile:
             return None
-        
+
         profile.blood_type = health_data.blood_type
         profile.primary_doctor_name = health_data.primary_doctor_name
         profile.primary_doctor_phone = health_data.primary_doctor_phone
@@ -52,11 +54,11 @@ class HealthService:
         profile.medical_conditions = health_data.medical_conditions
         profile.surgical_history = health_data.surgical_history
         profile.immunization_record = health_data.immunization_record
-        
+
         db.commit()
         db.refresh(profile)
         return profile
-    
+
     # Medications
     @staticmethod
     def add_medication(db: Session, child_id: int, center_id: int, med_data: MedicationCreate) -> Optional[Medication]:
@@ -66,7 +68,7 @@ class HealthService:
         ).first()
         if not child:
             return None
-        
+
         medication = Medication(
             child_id=child_id,
             name=med_data.name,
@@ -82,7 +84,7 @@ class HealthService:
         db.commit()
         db.refresh(medication)
         return medication
-    
+
     @staticmethod
     def get_medications(db: Session, child_id: int, center_id: int, active_only: bool = False) -> List[Medication]:
         """Get medications for child"""
@@ -91,13 +93,13 @@ class HealthService:
         ).first()
         if not child:
             return []
-        
+
         query = db.query(Medication).filter_by(child_id=child_id)
         if active_only:
             query = query.filter_by(is_active=True)
-        
+
         return query.all()
-    
+
     @staticmethod
     def log_medication(db: Session, child_id: int, center_id: int, log_data: MedicationLogCreate) -> Optional[MedicationLog]:
         """Log medication administration"""
@@ -106,7 +108,7 @@ class HealthService:
         ).first()
         if not child:
             return None
-        
+
         med_log = MedicationLog(
             medication_id=log_data.medication_id,
             child_id=child_id,
@@ -118,7 +120,7 @@ class HealthService:
         db.commit()
         db.refresh(med_log)
         return med_log
-    
+
     # Vaccinations
     @staticmethod
     def add_vaccination(db: Session, child_id: int, center_id: int, vax_data: VaccinationCreate) -> Optional[Vaccination]:
@@ -128,7 +130,7 @@ class HealthService:
         ).first()
         if not child:
             return None
-        
+
         vaccination = Vaccination(
             child_id=child_id,
             vaccine_name=vax_data.vaccine_name,
@@ -142,7 +144,7 @@ class HealthService:
         db.commit()
         db.refresh(vaccination)
         return vaccination
-    
+
     @staticmethod
     def get_vaccinations(db: Session, child_id: int, center_id: int) -> List[Vaccination]:
         """Get vaccinations for child"""
@@ -151,9 +153,9 @@ class HealthService:
         ).first()
         if not child:
             return []
-        
+
         return db.query(Vaccination).filter_by(child_id=child_id).all()
-    
+
     # Incident Reports
     @staticmethod
     def create_incident_report(db: Session, child_id: int, center_id: int, incident_data: IncidentReportCreate) -> Optional[IncidentReport]:
@@ -163,7 +165,7 @@ class HealthService:
         ).first()
         if not child:
             return None
-        
+
         incident = IncidentReport(
             child_id=child_id,
             incident_type=incident_data.incident_type,
@@ -183,7 +185,7 @@ class HealthService:
         db.commit()
         db.refresh(incident)
         return incident
-    
+
     @staticmethod
     def get_incident_reports(db: Session, child_id: int, center_id: int) -> List[IncidentReport]:
         """Get incident reports for child"""
@@ -192,11 +194,12 @@ class HealthService:
         ).first()
         if not child:
             return []
-        
+
         return db.query(IncidentReport).filter_by(child_id=child_id).order_by(IncidentReport.date_time.desc()).all()
 
+
 class DailyLogService:
-    
+
     @staticmethod
     def get_or_create_daily_log(db: Session, child_id: int, center_id: int, staff_id: int, log_date: date) -> Optional[DailyLog]:
         """Get or create daily log for child on date"""
@@ -205,8 +208,9 @@ class DailyLogService:
         ).first()
         if not child:
             return None
-        
-        daily_log = db.query(DailyLog).filter_by(child_id=child_id, log_date=log_date).first()
+
+        daily_log = db.query(DailyLog).filter_by(
+            child_id=child_id, log_date=log_date).first()
         if not daily_log:
             daily_log = DailyLog(
                 child_id=child_id,
@@ -216,32 +220,34 @@ class DailyLogService:
             db.add(daily_log)
             db.commit()
             db.refresh(daily_log)
-        
+
         return daily_log
-    
+
     @staticmethod
     def update_daily_log(db: Session, child_id: int, center_id: int, log_date: date, log_data: DailyLogCreate) -> Optional[DailyLog]:
         """Update daily log"""
-        daily_log = db.query(DailyLog).filter_by(child_id=child_id, log_date=log_date).first()
+        daily_log = db.query(DailyLog).filter_by(
+            child_id=child_id, log_date=log_date).first()
         if not daily_log:
             return None
-        
+
         daily_log.overall_mood = log_data.overall_mood
         daily_log.behavior = log_data.behavior
         daily_log.weather = log_data.weather
         daily_log.notes = log_data.notes
-        
+
         db.commit()
         db.refresh(daily_log)
         return daily_log
-    
+
     @staticmethod
     def add_nap_record(db: Session, child_id: int, center_id: int, log_date: date, staff_id: int, nap_data: NapRecordCreate) -> Optional[NapRecord]:
         """Add nap record"""
-        daily_log = DailyLogService.get_or_create_daily_log(db, child_id, center_id, staff_id, log_date)
+        daily_log = DailyLogService.get_or_create_daily_log(
+            db, child_id, center_id, staff_id, log_date)
         if not daily_log:
             return None
-        
+
         nap = NapRecord(
             daily_log_id=daily_log.id,
             start_time=nap_data.start_time,
@@ -253,14 +259,15 @@ class DailyLogService:
         db.commit()
         db.refresh(nap)
         return nap
-    
+
     @staticmethod
     def add_activity_log(db: Session, child_id: int, center_id: int, log_date: date, staff_id: int, activity_data: ActivityLogCreate) -> Optional[ActivityLog]:
         """Add activity log"""
-        daily_log = DailyLogService.get_or_create_daily_log(db, child_id, center_id, staff_id, log_date)
+        daily_log = DailyLogService.get_or_create_daily_log(
+            db, child_id, center_id, staff_id, log_date)
         if not daily_log:
             return None
-        
+
         activity = ActivityLog(
             daily_log_id=daily_log.id,
             activity_type=activity_data.activity_type,
@@ -274,14 +281,15 @@ class DailyLogService:
         db.commit()
         db.refresh(activity)
         return activity
-    
+
     @staticmethod
     def add_meal_log(db: Session, child_id: int, center_id: int, log_date: date, staff_id: int, meal_data: MealLogCreate) -> Optional[MealLog]:
         """Add meal log"""
-        daily_log = DailyLogService.get_or_create_daily_log(db, child_id, center_id, staff_id, log_date)
+        daily_log = DailyLogService.get_or_create_daily_log(
+            db, child_id, center_id, staff_id, log_date)
         if not daily_log:
             return None
-        
+
         meal = MealLog(
             daily_log_id=daily_log.id,
             meal_type=meal_data.meal_type,
@@ -295,14 +303,15 @@ class DailyLogService:
         db.commit()
         db.refresh(meal)
         return meal
-    
+
     @staticmethod
     def add_diaper_log(db: Session, child_id: int, center_id: int, log_date: date, staff_id: int, diaper_data: DiaperLogCreate) -> Optional[DiaperLog]:
         """Add diaper log"""
-        daily_log = DailyLogService.get_or_create_daily_log(db, child_id, center_id, staff_id, log_date)
+        daily_log = DailyLogService.get_or_create_daily_log(
+            db, child_id, center_id, staff_id, log_date)
         if not daily_log:
             return None
-        
+
         diaper = DiaperLog(
             daily_log_id=daily_log.id,
             time=diaper_data.time,
@@ -314,14 +323,15 @@ class DailyLogService:
         db.commit()
         db.refresh(diaper)
         return diaper
-    
+
     @staticmethod
     def add_potty_log(db: Session, child_id: int, center_id: int, log_date: date, staff_id: int, potty_data: PottyLogCreate) -> Optional[PottyLog]:
         """Add potty log"""
-        daily_log = DailyLogService.get_or_create_daily_log(db, child_id, center_id, staff_id, log_date)
+        daily_log = DailyLogService.get_or_create_daily_log(
+            db, child_id, center_id, staff_id, log_date)
         if not daily_log:
             return None
-        
+
         potty = PottyLog(
             daily_log_id=daily_log.id,
             time=potty_data.time,
@@ -334,7 +344,7 @@ class DailyLogService:
         db.commit()
         db.refresh(potty)
         return potty
-    
+
     @staticmethod
     def get_daily_logs(db: Session, child_id: int, center_id: int, start_date: date, end_date: date) -> List[DailyLog]:
         """Get daily logs for date range"""
@@ -343,7 +353,7 @@ class DailyLogService:
         ).first()
         if not child:
             return []
-        
+
         return db.query(DailyLog).filter(
             and_(
                 DailyLog.child_id == child_id,
@@ -351,7 +361,7 @@ class DailyLogService:
                 DailyLog.log_date <= end_date
             )
         ).order_by(DailyLog.log_date.desc()).all()
-    
+
     @staticmethod
     def get_daily_log(db: Session, child_id: int, center_id: int, log_date: date) -> Optional[DailyLog]:
         """Get daily log for specific date"""
@@ -360,11 +370,12 @@ class DailyLogService:
         ).first()
         if not child:
             return None
-        
+
         return db.query(DailyLog).filter_by(child_id=child_id, log_date=log_date).first()
 
+
 class AttendanceService:
-    
+
     @staticmethod
     def check_in(db: Session, child_id: int, center_id: int, check_in_data: CheckInRequest, staff_id: int) -> Optional[Attendance]:
         """Check in child"""
@@ -373,13 +384,13 @@ class AttendanceService:
         ).first()
         if not child:
             return None
-        
+
         today = date.today()
         attendance = db.query(Attendance).filter_by(
             child_id=child_id,
             check_in_date=today
         ).first()
-        
+
         if not attendance:
             attendance = Attendance(
                 child_id=child_id,
@@ -392,11 +403,11 @@ class AttendanceService:
         else:
             attendance.check_in_time = datetime.now()
             attendance.check_in_method = check_in_data.check_in_method
-        
+
         db.commit()
         db.refresh(attendance)
         return attendance
-    
+
     @staticmethod
     def check_out(db: Session, child_id: int, center_id: int, check_out_data: CheckOutRequest) -> Optional[Attendance]:
         """Check out child"""
@@ -405,24 +416,24 @@ class AttendanceService:
         ).first()
         if not child:
             return None
-        
+
         today = date.today()
         attendance = db.query(Attendance).filter_by(
             child_id=child_id,
             check_in_date=today
         ).first()
-        
+
         if not attendance:
             return None
-        
+
         attendance.check_out_time = datetime.now()
         attendance.check_out_method = check_out_data.check_out_method
         attendance.pickup_person = check_out_data.pickup_person
-        
+
         db.commit()
         db.refresh(attendance)
         return attendance
-    
+
     @staticmethod
     def get_attendance(db: Session, child_id: int, center_id: int, start_date: date, end_date: date) -> List[Attendance]:
         """Get attendance for date range"""
@@ -431,7 +442,7 @@ class AttendanceService:
         ).first()
         if not child:
             return []
-        
+
         return db.query(Attendance).filter(
             and_(
                 Attendance.child_id == child_id,
@@ -439,7 +450,7 @@ class AttendanceService:
                 Attendance.check_in_date <= end_date
             )
         ).order_by(Attendance.check_in_date.desc()).all()
-    
+
     @staticmethod
     def get_today_attendance(db: Session, child_id: int, center_id: int) -> Optional[Attendance]:
         """Get today's attendance"""
@@ -449,7 +460,7 @@ class AttendanceService:
         ).first()
         if not child:
             return None
-        
+
         return db.query(Attendance).filter_by(
             child_id=child_id,
             check_in_date=today

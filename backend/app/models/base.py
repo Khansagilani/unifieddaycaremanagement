@@ -6,6 +6,7 @@ import uuid
 
 from app.database import Base
 
+
 class Center(Base):
     __tablename__ = "centers"
 
@@ -18,13 +19,16 @@ class Center(Base):
     capacity = Column(Integer, default=50)
     operating_hours = Column(String(255))
     logo_url = Column(String)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True),
+                        default=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    users = relationship("User", back_populates="center", cascade="all, delete-orphan")
+    users = relationship("User", back_populates="center",
+                         cascade="all, delete-orphan")
 
     class Config:
         from_attributes = True
+
 
 class ChildStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"
@@ -32,16 +36,19 @@ class ChildStatus(str, enum.Enum):
     WAITLISTED = "WAITLISTED"
     GRADUATED = "GRADUATED"
 
+
 class Gender(str, enum.Enum):
     MALE = "MALE"
     FEMALE = "FEMALE"
     OTHER = "OTHER"
 
+
 class Child(Base):
     __tablename__ = "children"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    center_id = Column(UUID(as_uuid=True), ForeignKey("centers.id", ondelete="CASCADE"), nullable=False)
+    center_id = Column(UUID(as_uuid=True), ForeignKey(
+        "centers.id", ondelete="CASCADE"), nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     date_of_birth = Column(DATE, nullable=False)
@@ -54,10 +61,12 @@ class Child(Base):
     home_language = Column(String(100))
     religion = Column(String(100))
     cultural_notes = Column(Text)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True),
+                        default=lambda: datetime.now(timezone.utc))
 
     class Config:
         from_attributes = True
+
 
 class RelationshipType(str, enum.Enum):
     MOTHER = "MOTHER"
@@ -69,12 +78,15 @@ class RelationshipType(str, enum.Enum):
     GUARDIAN = "GUARDIAN"
     OTHER = "OTHER"
 
+
 class ParentChild(Base):
     __tablename__ = "parent_child"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    child_id = Column(UUID(as_uuid=True), ForeignKey("children.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+    child_id = Column(UUID(as_uuid=True), ForeignKey(
+        "children.id", ondelete="CASCADE"), nullable=False)
     relationship = Column(SQLEnum(RelationshipType), nullable=False)
     is_primary_contact = Column(Boolean, default=False)
     can_pickup = Column(Boolean, default=True)
@@ -86,11 +98,13 @@ class ParentChild(Base):
     class Config:
         from_attributes = True
 
+
 class AuthorizedPickup(Base):
     __tablename__ = "authorized_pickups"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    child_id = Column(UUID(as_uuid=True), ForeignKey("children.id", ondelete="CASCADE"), nullable=False)
+    child_id = Column(UUID(as_uuid=True), ForeignKey(
+        "children.id", ondelete="CASCADE"), nullable=False)
     full_name = Column(String(255), nullable=False)
     phone = Column(String(50), nullable=False)
     photo_url = Column(String)
@@ -102,11 +116,13 @@ class AuthorizedPickup(Base):
     class Config:
         from_attributes = True
 
+
 class EmergencyContact(Base):
     __tablename__ = "emergency_contacts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    child_id = Column(UUID(as_uuid=True), ForeignKey("children.id", ondelete="CASCADE"), nullable=False)
+    child_id = Column(UUID(as_uuid=True), ForeignKey(
+        "children.id", ondelete="CASCADE"), nullable=False)
     full_name = Column(String(255), nullable=False)
     relationship = Column(String(100))
     phone_primary = Column(String(50), nullable=False)
@@ -116,11 +132,13 @@ class EmergencyContact(Base):
     class Config:
         from_attributes = True
 
+
 class Room(Base):
     __tablename__ = "rooms"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    center_id = Column(UUID(as_uuid=True), ForeignKey("centers.id", ondelete="CASCADE"), nullable=False)
+    center_id = Column(UUID(as_uuid=True), ForeignKey(
+        "centers.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(100), nullable=False)
     age_group = Column(String(50), nullable=False)
     max_capacity = Column(Integer, nullable=False)
@@ -131,11 +149,13 @@ class Room(Base):
     class Config:
         from_attributes = True
 
+
 class StaffCertification(Base):
     __tablename__ = "staff_certifications"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
     certification_name = Column(String(255), nullable=False)
     issued_by = Column(String(255))
     issued_date = Column(DATE, nullable=False)

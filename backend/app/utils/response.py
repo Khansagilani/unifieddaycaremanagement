@@ -1,5 +1,6 @@
 from typing import Any, Optional, List
 
+
 def success_response(data: Any, message: str = "", pagination: dict = None):
     """Standard success response format"""
     response = {"success": True, "data": data}
@@ -8,6 +9,7 @@ def success_response(data: Any, message: str = "", pagination: dict = None):
     if pagination:
         response["pagination"] = pagination
     return response
+
 
 def error_response(message: str, code: str = "ERROR", details: List = None):
     """Standard error response format"""

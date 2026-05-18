@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from app.schemas.media_messaging_billing import MediaUploadRequest
 
+
 class MediaService:
     @staticmethod
     def add_media(db: Session, staff_id: int, media_data: MediaUploadRequest) -> Optional[MediaPost]:
@@ -14,7 +15,7 @@ class MediaService:
             child = db.query(Child).filter_by(id=media_data.child_id).first()
             if not child:
                 return None
-        
+
         media = MediaPost(
             child_id=media_data.child_id,
             staff_id=staff_id,
@@ -37,7 +38,8 @@ class MediaService:
                 if child and child.room:
                     center_id = str(child.room.center_id)
 
-                parent_links = db.query(ParentChild).filter_by(child_id=media.child_id).all()
+                parent_links = db.query(ParentChild).filter_by(
+                    child_id=media.child_id).all()
                 parent_ids = [str(p.user_id) for p in parent_links]
                 if center_id:
                     asyncio.create_task(manager.broadcast_to_parents_of_child(center_id, str(media.child_id), parent_ids, "media:posted", {

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
 
+
 class BillingService:
     @staticmethod
     def create_fee_plan(db: Session, center_id: int, name: str, amount_cents: int, billing_cycle: str, description: str = None) -> FeePlan:
@@ -38,7 +39,8 @@ class BillingService:
             if child and child.room:
                 center_id = str(child.room.center_id)
 
-            parent_links = db.query(ParentChild).filter_by(child_id=child_id).all()
+            parent_links = db.query(ParentChild).filter_by(
+                child_id=child_id).all()
             parent_ids = [str(p.user_id) for p in parent_links]
             if center_id:
                 asyncio.create_task(manager.broadcast_to_parents_of_child(center_id, str(child_id), parent_ids, "invoice:issued", {

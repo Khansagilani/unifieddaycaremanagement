@@ -5,6 +5,7 @@ from typing import Optional
 
 router = APIRouter()
 
+
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(None)):
     """WebSocket endpoint that accepts a `token` query parameter (JWT).

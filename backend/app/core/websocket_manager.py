@@ -2,6 +2,7 @@ from fastapi import WebSocket
 from typing import Dict, List
 import json
 
+
 class WebSocketManager:
     def __init__(self):
         # Map center_id → list of {websocket, user_id, role}
@@ -56,5 +57,6 @@ class WebSocketManager:
                     await conn["ws"].send_json({"event": event, "data": data})
                 except:
                     pass
+
 
 manager = WebSocketManager()

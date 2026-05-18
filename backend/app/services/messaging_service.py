@@ -6,18 +6,19 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
 
+
 class MessagingService:
     @staticmethod
     def create_conversation(db: Session, creator_id: int, member_ids: List[int], name: Optional[str] = None) -> Conversation:
         convo = Conversation(name=name)
         db.add(convo)
         db.flush()
-        
+
         # add creator
         db.add(ConversationMember(conversation_id=convo.id, user_id=creator_id))
         for m in set(member_ids):
             db.add(ConversationMember(conversation_id=convo.id, user_id=m))
-        
+
         db.commit()
         db.refresh(convo)
         return convo
@@ -35,11 +36,13 @@ class MessagingService:
         db.refresh(msg)
         # Broadcast to conversation members (async)
         try:
-            members = db.query(ConversationMember).filter_by(conversation_id=conversation_id).all()
+            members = db.query(ConversationMember).filter_by(
+                conversation_id=conversation_id).all()
             member_ids = [str(m.user_id) for m in members]
             # Try to infer center from sender
             sender = db.query(User).filter_by(id=sender_id).first()
-            center_id = str(sender.center_id) if sender and sender.center_id else ""
+            center_id = str(
+                sender.center_id) if sender and sender.center_id else ""
             if center_id:
                 asyncio.create_task(manager.broadcast_to_parents_of_child(center_id, "", member_ids, "message:new", {
                     "id": msg.id,

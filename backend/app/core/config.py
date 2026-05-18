@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
+
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:khansa1086@localhost:5432/nestcare"
     SECRET_KEY: str = "your-secret-key-change-this-in-production"
@@ -18,8 +19,10 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
+
 @lru_cache()
 def get_settings():
     return Settings()
+
 
 settings = get_settings()

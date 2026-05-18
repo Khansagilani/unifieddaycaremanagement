@@ -1,3 +1,4 @@
+from app.routers import ws
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZIPMiddleware
@@ -17,7 +18,8 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "http://localhost:5173"],
+    allow_origins=[settings.FRONTEND_URL,
+                   "http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,18 +35,22 @@ app.include_router(health_and_daily.router)
 app.include_router(media_messaging_billing.router)
 app.include_router(media_messaging_billing.msg_router)
 app.include_router(media_messaging_billing.billing_router)
-from app.routers import ws
 app.include_router(ws.router)
 
 # Health check endpoint
+
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "NestCare API"}
 
 # Root endpoint
+
+
 @app.get("/")
 def root():
     return {"message": "NestCare API v1.0.0"}
+
 
 if __name__ == "__main__":
     import uvicorn

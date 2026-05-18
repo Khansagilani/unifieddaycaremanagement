@@ -3,9 +3,11 @@ from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 
+
 class MediaTypeEnum(str, Enum):
     PHOTO = "PHOTO"
     VIDEO = "VIDEO"
+
 
 class MediaUploadRequest(BaseModel):
     child_id: Optional[int] = None
@@ -14,6 +16,7 @@ class MediaUploadRequest(BaseModel):
     media_type: MediaTypeEnum
     url: HttpUrl
     public_id: Optional[str] = None
+
 
 class MediaResponse(MediaUploadRequest):
     id: int
@@ -24,9 +27,12 @@ class MediaResponse(MediaUploadRequest):
         from_attributes = True
 
 # Messaging
+
+
 class ConversationCreate(BaseModel):
     name: Optional[str] = None
     member_ids: List[int] = []
+
 
 class ConversationResponse(BaseModel):
     id: int
@@ -36,10 +42,12 @@ class ConversationResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class MessageCreate(BaseModel):
     conversation_id: int
     content: str = Field(..., min_length=1)
     attachments: Optional[List[str]] = []
+
 
 class MessageResponse(MessageCreate):
     id: int
@@ -50,11 +58,14 @@ class MessageResponse(MessageCreate):
         from_attributes = True
 
 # Billing (skeleton)
+
+
 class FeePlanCreate(BaseModel):
     name: str
     amount_cents: int
     billing_cycle: str
     description: Optional[str] = None
+
 
 class FeePlanResponse(FeePlanCreate):
     id: int
@@ -64,10 +75,12 @@ class FeePlanResponse(FeePlanCreate):
     class Config:
         from_attributes = True
 
+
 class InvoiceCreate(BaseModel):
     child_id: int
     fee_plan_id: int
     due_date: datetime
+
 
 class InvoiceResponse(InvoiceCreate):
     id: int

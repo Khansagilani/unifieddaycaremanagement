@@ -25,21 +25,22 @@ from app.models.messaging import (
 from app.core.security import hash_password
 from app.core.config import settings
 
+
 def seed_database():
     """Seed database with test data"""
-    
+
     # Create tables
     Base.metadata.create_all(bind=engine)
-    
+
     db = SessionLocal()
-    
+
     try:
         # Check if data already exists
         center_count = db.query(Center).count()
         if center_count > 0:
             print("Database already seeded. Skipping...")
             return
-        
+
         # Create a center
         print("Creating center...")
         center = Center(
@@ -54,18 +55,22 @@ def seed_database():
         )
         db.add(center)
         db.flush()
-        
+
         # Create rooms
         print("Creating rooms...")
         rooms = [
-            Room(id=uuid.uuid4(), center_id=center.id, name="Newborn Room", age_group="NEWBORN", max_capacity=8, min_age_months=0, max_age_months=6),
-            Room(id=uuid.uuid4(), center_id=center.id, name="Infant Room", age_group="INFANT", max_capacity=10, min_age_months=6, max_age_months=18),
-            Room(id=uuid.uuid4(), center_id=center.id, name="Toddler Room", age_group="TODDLER", max_capacity=15, min_age_months=18, max_age_months=36),
-            Room(id=uuid.uuid4(), center_id=center.id, name="Preschool Room", age_group="PRESCHOOL", max_capacity=20, min_age_months=36, max_age_months=60),
+            Room(id=uuid.uuid4(), center_id=center.id, name="Newborn Room",
+                 age_group="NEWBORN", max_capacity=8, min_age_months=0, max_age_months=6),
+            Room(id=uuid.uuid4(), center_id=center.id, name="Infant Room",
+                 age_group="INFANT", max_capacity=10, min_age_months=6, max_age_months=18),
+            Room(id=uuid.uuid4(), center_id=center.id, name="Toddler Room",
+                 age_group="TODDLER", max_capacity=15, min_age_months=18, max_age_months=36),
+            Room(id=uuid.uuid4(), center_id=center.id, name="Preschool Room",
+                 age_group="PRESCHOOL", max_capacity=20, min_age_months=36, max_age_months=60),
         ]
         db.add_all(rooms)
         db.flush()
-        
+
         # Create admin user
         print("Creating admin user...")
         admin_user = User(
@@ -80,7 +85,7 @@ def seed_database():
         )
         db.add(admin_user)
         db.flush()
-        
+
         # Create staff users
         print("Creating staff users...")
         staff_users = []
@@ -98,7 +103,7 @@ def seed_database():
             db.add(staff)
             staff_users.append(staff)
         db.flush()
-        
+
         # Create parent users
         print("Creating parent users...")
         parent_users = []
@@ -116,11 +121,11 @@ def seed_database():
             db.add(parent)
             parent_users.append(parent)
         db.flush()
-        
+
         # Create children
         print("Creating children...")
         children = []
-        
+
         # Newborn
         child1 = Child(
             id=uuid.uuid4(),
@@ -137,7 +142,7 @@ def seed_database():
         )
         db.add(child1)
         children.append(child1)
-        
+
         # Toddler
         child2 = Child(
             id=uuid.uuid4(),
@@ -153,7 +158,7 @@ def seed_database():
         )
         db.add(child2)
         children.append(child2)
-        
+
         # Preschooler
         child3 = Child(
             id=uuid.uuid4(),
@@ -170,9 +175,9 @@ def seed_database():
         )
         db.add(child3)
         children.append(child3)
-        
+
         db.flush()
-        
+
         # Link parents to children
         print("Linking parents to children...")
         for i, child in enumerate(children):
@@ -188,14 +193,15 @@ def seed_database():
             )
             db.add(parent_link)
         db.flush()
-        
+
         # Create child food profiles
         print("Creating food profiles...")
         for child in children:
             food_profile = ChildFoodProfile(
                 id=uuid.uuid4(),
                 child_id=child.id,
-                feeding_method=FeedingMethod.BOTTLE_FORMULA if child == children[0] else FeedingMethod.MIXED,
+                feeding_method=FeedingMethod.BOTTLE_FORMULA if child == children[
+                    0] else FeedingMethod.MIXED,
                 bottle_size_ml=250 if child == children[0] else None,
                 formula_brand="Similac" if child == children[0] else None,
                 feeds_per_day=5,
@@ -203,7 +209,7 @@ def seed_database():
                 needs_help_feeding=True
             )
             db.add(food_profile)
-            
+
             # Add food preferences
             food_pref = FoodPreference(
                 id=uuid.uuid4(),
@@ -212,9 +218,9 @@ def seed_database():
                 preference_type=FoodPreferenceType.LOVES
             )
             db.add(food_pref)
-        
+
         db.flush()
-        
+
         # Create allergies
         print("Creating allergies...")
         allergy = Allergy(
@@ -228,7 +234,7 @@ def seed_database():
             epipen_location="Classroom shelf"
         )
         db.add(allergy)
-        
+
         allergy2 = Allergy(
             id=uuid.uuid4(),
             child_id=children[2].id,
@@ -239,7 +245,7 @@ def seed_database():
         )
         db.add(allergy2)
         db.flush()
-        
+
         # Create health profiles
         print("Creating health profiles...")
         for child in children:
@@ -255,7 +261,7 @@ def seed_database():
                 insurance_number="BC123456789"
             )
             db.add(health_profile)
-            
+
             # Add medication for first child
             if child == children[0]:
                 med = Medication(
@@ -272,7 +278,7 @@ def seed_database():
                     is_active=True
                 )
                 db.add(med)
-            
+
             # Add vaccination
             vac = Vaccination(
                 id=uuid.uuid4(),
@@ -285,9 +291,9 @@ def seed_database():
                 is_up_to_date=True
             )
             db.add(vac)
-        
+
         db.flush()
-        
+
         # Create child personalities
         print("Creating child personalities...")
         for child in children:
@@ -303,9 +309,9 @@ def seed_database():
                 temperament_notes="Calm and observant"
             )
             db.add(personality)
-        
+
         db.flush()
-        
+
         # Create emotional support plans
         print("Creating emotional support plans...")
         for child in children:
@@ -318,9 +324,9 @@ def seed_database():
                 behavioral_notes="Responds well to routine"
             )
             db.add(plan)
-        
+
         db.flush()
-        
+
         # Create routines
         print("Creating child routines...")
         for child in children:
@@ -332,33 +338,39 @@ def seed_database():
                 nap_duration_minutes=90,
                 nap_preferences="Darkened room, white noise",
                 bedtime_rituals="Story time",
-                potty_training_stage=ToiletStage.NOT_STARTED if child in [children[0], children[1]] else ToiletStage.IN_TRAINING,
-                uses_pacifier=True if child in [children[0], children[1]] else False,
+                potty_training_stage=ToiletStage.NOT_STARTED if child in [
+                    children[0], children[1]] else ToiletStage.IN_TRAINING,
+                uses_pacifier=True if child in [
+                    children[0], children[1]] else False,
                 uses_comfort_blanket=True,
                 comfort_blanket_desc="Blue cotton blanket"
             )
             db.add(routine)
-        
+
         db.flush()
-        
+
         # Create development profiles
         print("Creating development profiles...")
         for child in children:
-            walking = WalkingStage.NOT_WALKING if child == children[0] else WalkingStage.SUPPORTED if child == children[1] else WalkingStage.INDEPENDENT
+            walking = WalkingStage.NOT_WALKING if child == children[
+                0] else WalkingStage.SUPPORTED if child == children[1] else WalkingStage.INDEPENDENT
             dev = ChildDevelopment(
                 id=uuid.uuid4(),
                 child_id=child.id,
                 walking_stage=walking,
-                talking_stage=TalkingStage.BABBLING if child in [children[0], children[1]] else TalkingStage.TWO_WORDS,
-                feeding_stage=FeedingStage.MILK_ONLY if child == children[0] else FeedingStage.INTRODUCING_SOLIDS if child == children[1] else FeedingStage.MIXED,
-                toilet_stage=ToiletStage.NOT_STARTED if child in [children[0], children[1]] else ToiletStage.IN_TRAINING,
+                talking_stage=TalkingStage.BABBLING if child in [
+                    children[0], children[1]] else TalkingStage.TWO_WORDS,
+                feeding_stage=FeedingStage.MILK_ONLY if child == children[
+                    0] else FeedingStage.INTRODUCING_SOLIDS if child == children[1] else FeedingStage.MIXED,
+                toilet_stage=ToiletStage.NOT_STARTED if child in [
+                    children[0], children[1]] else ToiletStage.IN_TRAINING,
                 milestones_achieved="Smiling, cooing",
                 areas_to_support="Tummy time strength"
             )
             db.add(dev)
-        
+
         db.flush()
-        
+
         # Create authorized pickups
         print("Creating authorized pickups...")
         for child in children:
@@ -371,9 +383,9 @@ def seed_database():
                 is_active=True
             )
             db.add(pickup)
-        
+
         db.flush()
-        
+
         # Create emergency contacts
         print("Creating emergency contacts...")
         for child in children:
@@ -387,9 +399,9 @@ def seed_database():
                 contact_order=1
             )
             db.add(ec)
-        
+
         db.flush()
-        
+
         # Create daily logs
         print("Creating daily logs...")
         for child in children:
@@ -404,20 +416,22 @@ def seed_database():
                 had_good_day=True
             )
             db.add(daily_log)
-            
+
             # Add nap record
             nap = NapRecord(
                 id=uuid.uuid4(),
                 daily_log_id=daily_log.id,
                 staff_id=staff_users[0].id,
-                sleep_start=datetime.now(timezone.utc).replace(hour=13, minute=0),
-                sleep_end=datetime.now(timezone.utc).replace(hour=14, minute=30),
+                sleep_start=datetime.now(
+                    timezone.utc).replace(hour=13, minute=0),
+                sleep_end=datetime.now(timezone.utc).replace(
+                    hour=14, minute=30),
                 duration_minutes=90,
                 sleep_quality=NapQuality.GOOD,
                 notes="Slept well"
             )
             db.add(nap)
-            
+
             # Add meal log
             meal = MealLog(
                 id=uuid.uuid4(),
@@ -430,7 +444,7 @@ def seed_database():
                 notes="Ate most of lunch, left some carrots"
             )
             db.add(meal)
-            
+
             # Add diaper log
             diaper = DiaperLog(
                 id=uuid.uuid4(),
@@ -441,7 +455,7 @@ def seed_database():
                 notes="Normal"
             )
             db.add(diaper)
-            
+
             # Add activity log
             activity = ActivityLog(
                 id=uuid.uuid4(),
@@ -451,13 +465,14 @@ def seed_database():
                 activity_name="Playground time",
                 description="Played on the grass and looked at clouds",
                 engagement_level=EngagementLevel.VERY_ENGAGED,
-                occurred_at=datetime.now(timezone.utc).replace(hour=15, minute=0),
+                occurred_at=datetime.now(
+                    timezone.utc).replace(hour=15, minute=0),
                 staff_notes="Very engaged and happy"
             )
             db.add(activity)
-        
+
         db.flush()
-        
+
         # Create attendance
         print("Creating attendance...")
         for child in children:
@@ -466,16 +481,18 @@ def seed_database():
                 child_id=child.id,
                 center_id=center.id,
                 date=date.today(),
-                checkin_at=datetime.now(timezone.utc).replace(hour=8, minute=0),
+                checkin_at=datetime.now(
+                    timezone.utc).replace(hour=8, minute=0),
                 checkin_by="Parent",
                 checkin_method=CheckinMethod.MANUAL,
-                checkout_at=datetime.now(timezone.utc).replace(hour=17, minute=0),
+                checkout_at=datetime.now(
+                    timezone.utc).replace(hour=17, minute=0),
                 checkout_by="Grandpa John"
             )
             db.add(att)
-        
+
         db.flush()
-        
+
         # Create fee plan
         print("Creating fee plan...")
         fee_plan = FeePlan(
@@ -490,7 +507,7 @@ def seed_database():
         )
         db.add(fee_plan)
         db.flush()
-        
+
         # Create invoices
         print("Creating invoices...")
         inv1 = Invoice(
@@ -506,7 +523,7 @@ def seed_database():
             paid_at=datetime.now(timezone.utc)
         )
         db.add(inv1)
-        
+
         inv2 = Invoice(
             id=uuid.uuid4(),
             child_id=children[1].id,
@@ -519,9 +536,9 @@ def seed_database():
             status=InvoiceStatus.OVERDUE
         )
         db.add(inv2)
-        
+
         db.flush()
-        
+
         # Commit all changes
         db.commit()
         print("\n✓ Database seeded successfully!")
@@ -530,7 +547,7 @@ def seed_database():
         print(f"  Admin: admin@nestcare.com / Admin1234!")
         print(f"  Staff: staff1@nestcare.com / Staff1234!")
         print(f"  Parent: parent1@nestcare.com / Parent1234!")
-        
+
     except Exception as e:
         db.rollback()
         print(f"✗ Error seeding database: {e}")
@@ -538,6 +555,7 @@ def seed_database():
         traceback.print_exc()
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_database()

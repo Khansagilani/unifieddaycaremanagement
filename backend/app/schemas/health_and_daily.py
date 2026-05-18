@@ -4,10 +4,13 @@ from datetime import datetime, date, time
 from enum import Enum
 
 # Enums
+
+
 class VaccineStatusEnum(str, Enum):
     DUE = "DUE"
     COMPLETED = "COMPLETED"
     OVERDUE = "OVERDUE"
+
 
 class MedicationFrequencyEnum(str, Enum):
     ONCE_DAILY = "ONCE_DAILY"
@@ -16,15 +19,18 @@ class MedicationFrequencyEnum(str, Enum):
     FOUR_TIMES_DAILY = "FOUR_TIMES_DAILY"
     AS_NEEDED = "AS_NEEDED"
 
+
 class IncidentSeverityEnum(str, Enum):
     MINOR = "MINOR"
     MODERATE = "MODERATE"
     SEVERE = "SEVERE"
 
+
 class CheckinMethodEnum(str, Enum):
     QR_CODE = "QR_CODE"
     PIN = "PIN"
     MANUAL = "MANUAL"
+
 
 class ActivityTypeEnum(str, Enum):
     OUTDOOR_PLAY = "OUTDOOR_PLAY"
@@ -37,6 +43,8 @@ class ActivityTypeEnum(str, Enum):
     FREE_PLAY = "FREE_PLAY"
 
 # Health Models
+
+
 class HealthProfileCreate(BaseModel):
     blood_type: Optional[str] = Field(None, max_length=10)
     primary_doctor_name: Optional[str] = None
@@ -47,6 +55,7 @@ class HealthProfileCreate(BaseModel):
     surgical_history: Optional[str] = None
     immunization_record: Optional[str] = None
 
+
 class HealthProfileResponse(HealthProfileCreate):
     id: int
     child_id: int
@@ -54,6 +63,7 @@ class HealthProfileResponse(HealthProfileCreate):
 
     class Config:
         from_attributes = True
+
 
 class MedicationCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
@@ -65,6 +75,7 @@ class MedicationCreate(BaseModel):
     instructions: Optional[str] = None
     is_active: bool = True
 
+
 class MedicationResponse(MedicationCreate):
     id: int
     child_id: int
@@ -73,11 +84,13 @@ class MedicationResponse(MedicationCreate):
     class Config:
         from_attributes = True
 
+
 class MedicationLogCreate(BaseModel):
     medication_id: int
     administered_by_staff_id: int
     time_administered: datetime
     notes: Optional[str] = None
+
 
 class MedicationLogResponse(MedicationLogCreate):
     id: int
@@ -85,6 +98,7 @@ class MedicationLogResponse(MedicationLogCreate):
 
     class Config:
         from_attributes = True
+
 
 class VaccinationCreate(BaseModel):
     vaccine_name: str = Field(..., min_length=1, max_length=200)
@@ -94,6 +108,7 @@ class VaccinationCreate(BaseModel):
     location: Optional[str] = None
     notes: Optional[str] = None
 
+
 class VaccinationResponse(VaccinationCreate):
     id: int
     child_id: int
@@ -101,6 +116,7 @@ class VaccinationResponse(VaccinationCreate):
 
     class Config:
         from_attributes = True
+
 
 class IncidentReportCreate(BaseModel):
     incident_type: str = Field(..., min_length=1, max_length=100)
@@ -116,6 +132,7 @@ class IncidentReportCreate(BaseModel):
     medical_treatment_needed: bool = False
     parent_signature_obtained: bool = False
 
+
 class IncidentReportResponse(IncidentReportCreate):
     id: int
     child_id: int
@@ -125,11 +142,14 @@ class IncidentReportResponse(IncidentReportCreate):
         from_attributes = True
 
 # Daily Log Models
+
+
 class NapRecordCreate(BaseModel):
     start_time: time
     end_time: time
     quality: Optional[str] = Field(None, max_length=50)
     notes: Optional[str] = None
+
 
 class NapRecordResponse(NapRecordCreate):
     id: int
@@ -139,6 +159,7 @@ class NapRecordResponse(NapRecordCreate):
     class Config:
         from_attributes = True
 
+
 class ActivityLogCreate(BaseModel):
     activity_type: ActivityTypeEnum
     start_time: time
@@ -146,6 +167,7 @@ class ActivityLogCreate(BaseModel):
     description: Optional[str] = None
     participation_level: Optional[str] = None
     notes: Optional[str] = None
+
 
 class ActivityLogResponse(ActivityLogCreate):
     id: int
@@ -155,6 +177,7 @@ class ActivityLogResponse(ActivityLogCreate):
     class Config:
         from_attributes = True
 
+
 class MealLogCreate(BaseModel):
     meal_type: str = Field(..., min_length=1, max_length=50)
     time: time
@@ -162,6 +185,7 @@ class MealLogCreate(BaseModel):
     amount_consumed: Optional[str] = None
     appetite: Optional[str] = None
     notes: Optional[str] = None
+
 
 class MealLogResponse(MealLogCreate):
     id: int
@@ -171,11 +195,13 @@ class MealLogResponse(MealLogCreate):
     class Config:
         from_attributes = True
 
+
 class DiaperLogCreate(BaseModel):
     time: time
     diaper_type: str = Field(..., min_length=1, max_length=50)
     contents: str = Field(..., min_length=1, max_length=50)
     notes: Optional[str] = None
+
 
 class DiaperLogResponse(DiaperLogCreate):
     id: int
@@ -185,12 +211,14 @@ class DiaperLogResponse(DiaperLogCreate):
     class Config:
         from_attributes = True
 
+
 class PottyLogCreate(BaseModel):
     time: time
     result_type: str = Field(..., min_length=1, max_length=50)
     success: bool
     accidents: int = 0
     notes: Optional[str] = None
+
 
 class PottyLogResponse(PottyLogCreate):
     id: int
@@ -200,6 +228,7 @@ class PottyLogResponse(PottyLogCreate):
     class Config:
         from_attributes = True
 
+
 class DailyLogCreate(BaseModel):
     child_id: int
     log_date: date
@@ -207,6 +236,7 @@ class DailyLogCreate(BaseModel):
     behavior: Optional[str] = None
     weather: Optional[str] = None
     notes: Optional[str] = None
+
 
 class DailyLogResponse(DailyLogCreate):
     id: int
@@ -216,6 +246,7 @@ class DailyLogResponse(DailyLogCreate):
 
     class Config:
         from_attributes = True
+
 
 class DailyLogDetailResponse(BaseModel):
     """Complete daily log with all sub-entries"""
@@ -227,13 +258,13 @@ class DailyLogDetailResponse(BaseModel):
     behavior: Optional[str]
     weather: Optional[str]
     notes: Optional[str]
-    
+
     naps: List[NapRecordResponse] = []
     activities: List[ActivityLogResponse] = []
     meals: List[MealLogResponse] = []
     diapers: List[DiaperLogResponse] = []
     potty: List[PottyLogResponse] = []
-    
+
     created_at: datetime
     updated_at: datetime
 
@@ -241,6 +272,8 @@ class DailyLogDetailResponse(BaseModel):
         from_attributes = True
 
 # Attendance Models
+
+
 class AttendanceCreateRequest(BaseModel):
     child_id: int
     check_in_method: CheckinMethodEnum
@@ -249,6 +282,7 @@ class AttendanceCreateRequest(BaseModel):
     check_out_time: Optional[datetime] = None
     pickup_person: Optional[str] = None
     notes: Optional[str] = None
+
 
 class AttendanceResponse(BaseModel):
     id: int
@@ -265,6 +299,7 @@ class AttendanceResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class AttendanceSummaryResponse(BaseModel):
     """Attendance summary for a date range"""
     child_id: int
@@ -274,10 +309,12 @@ class AttendanceSummaryResponse(BaseModel):
     total_hours: float
     attendance_rate: float
 
+
 class CheckInRequest(BaseModel):
     child_id: int
     check_in_method: CheckinMethodEnum
     notes: Optional[str] = None
+
 
 class CheckOutRequest(BaseModel):
     child_id: int

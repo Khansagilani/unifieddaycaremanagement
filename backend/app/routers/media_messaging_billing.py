@@ -29,6 +29,7 @@ stripe.api_key = getattr(settings, "STRIPE_SECRET_KEY", None)
 
 router = APIRouter(prefix="/api/media", tags=["media"])
 
+
 @router.post("/upload", response_model=dict)
 def upload_media(
     media_data: MediaUploadRequest,
@@ -67,6 +68,7 @@ def upload_cloudinary(
     except Exception as e:
         return error_response("CLOUDINARY_UPLOAD_FAILED", str(e))
 
+
 @router.get("/children/{child_id}", response_model=dict)
 def media_for_child(
     child_id: int,
@@ -76,8 +78,10 @@ def media_for_child(
     media = MediaService.get_media_for_child(db, child_id)
     return success_response([MediaResponse.from_orm(m) for m in media])
 
+
 # Messaging router
 msg_router = APIRouter(prefix="/api/messages", tags=["messaging"])
+
 
 @msg_router.post("/conversations", response_model=dict)
 def create_conversation(
@@ -85,8 +89,10 @@ def create_conversation(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    convo = MessagingService.create_conversation(db, current_user.id, payload.member_ids, payload.name)
+    convo = MessagingService.create_conversation(
+        db, current_user.id, payload.member_ids, payload.name)
     return success_response(ConversationResponse.from_orm(convo), "Conversation created")
+
 
 @msg_router.post("/messages", response_model=dict)
 def send_message(
@@ -94,8 +100,10 @@ def send_message(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    msg = MessagingService.send_message(db, current_user.id, payload.conversation_id, payload.content, payload.attachments)
+    msg = MessagingService.send_message(
+        db, current_user.id, payload.conversation_id, payload.content, payload.attachments)
     return success_response(MessageResponse.from_orm(msg), "Message sent")
+
 
 @msg_router.get("/conversations/{conversation_id}", response_model=dict)
 def get_messages(
@@ -106,8 +114,10 @@ def get_messages(
     msgs = MessagingService.get_conversation_messages(db, conversation_id)
     return success_response([MessageResponse.from_orm(m) for m in msgs])
 
+
 # Billing router
 billing_router = APIRouter(prefix="/api/billing", tags=["billing"])
+
 
 @billing_router.post("/fee-plans", response_model=dict)
 def create_fee_plan(
@@ -115,8 +125,10 @@ def create_fee_plan(
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
 ):
-    fp = BillingService.create_fee_plan(db, current_user.center_id, payload.name, payload.amount_cents, payload.billing_cycle, payload.description)
+    fp = BillingService.create_fee_plan(
+        db, current_user.center_id, payload.name, payload.amount_cents, payload.billing_cycle, payload.description)
     return success_response(FeePlanResponse.from_orm(fp), "Fee plan created")
+
 
 @billing_router.get("/fee-plans", response_model=dict)
 def list_fee_plans(
@@ -126,13 +138,15 @@ def list_fee_plans(
     plans = db.query(FeePlan).filter_by(center_id=current_user.center_id).all()
     return success_response([FeePlanResponse.from_orm(fp) for fp in plans])
 
+
 @billing_router.post("/invoices", response_model=dict)
 def create_invoice(
     payload: InvoiceCreate,
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
 ):
-    inv = BillingService.create_invoice(db, payload.child_id, payload.fee_plan_id, payload.due_date)
+    inv = BillingService.create_invoice(
+        db, payload.child_id, payload.fee_plan_id, payload.due_date)
     return success_response(InvoiceResponse.from_orm(inv), "Invoice created")
 
 
@@ -150,7 +164,8 @@ def list_invoices(
         # if parent, limit to their children
         if current_user.role == 'PARENT':
             from app.models.base import ParentChild
-            links = db.query(ParentChild).filter_by(user_id=current_user.id).all()
+            links = db.query(ParentChild).filter_by(
+                user_id=current_user.id).all()
             child_ids = [l.child_id for l in links]
             query = query.filter(Invoice.child_id.in_(child_ids))
     invoices = query.order_by(Invoice.created_at.desc()).all()
@@ -187,17 +202,18 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     webhook_secret = getattr(settings, "STRIPE_WEBHOOK_SECRET", None)
     if not webhook_secret:
         return error_response("WEBHOOK_NOT_CONFIGURED", "Webhook secret not configured")
-    
+
     sig_header = request.headers.get("stripe-signature", "")
     body = await request.body()
-    
+
     try:
-        event = stripe.Webhook.construct_event(body, sig_header, webhook_secret)
+        event = stripe.Webhook.construct_event(
+            body, sig_header, webhook_secret)
     except ValueError:
         return error_response("INVALID_PAYLOAD", "Invalid payload")
     except stripe.error.SignatureVerificationError:
         return error_response("INVALID_SIGNATURE", "Invalid signature")
-    
+
     if event["type"] == "payment_intent.succeeded":
         pi = event["data"]["object"]
         invoice_id = pi.get("metadata", {}).get("invoice_id")
@@ -207,6 +223,5 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                 inv.status = "PAID"
                 inv.paid_at = db.func.now()
                 db.commit()
-    
-    return success_response({}, "Webhook processed")
 
+    return success_response({}, "Webhook processed")
