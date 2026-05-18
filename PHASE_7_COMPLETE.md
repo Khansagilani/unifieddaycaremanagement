@@ -1,7 +1,7 @@
 # Phase 7 Completion Report - Staff Frontend Pages
 
 ## Summary
-Phase 7 is **COMPLETE**. Implemented all staff-facing frontend pages with full API integration and Stripe payment flow.
+Phase 7 is **COMPLETE**. Implemented all staff-facing frontend pages with full API integration and invoice management.
 
 ## Phase 7 Deliverables
 
@@ -77,21 +77,18 @@ Phase 7 is **COMPLETE**. Implemented all staff-facing frontend pages with full A
   - `GET /api/children/{id}` — fetch child details
   - `POST /api/media/upload-cloudinary` — upload media (Cloudinary)
 
-### ✅ Stripe Payment Integration
+### ✅ Invoice Management
 - **Location:** [frontend/src/pages/InvoicePay.jsx](frontend/src/pages/InvoicePay.jsx)
 - **Backend:** [backend/app/routers/media_messaging_billing.py](backend/app/routers/media_messaging_billing.py)
 - **Features:**
   - Fetch invoice details
-  - Create Stripe PaymentIntent on backend
-  - Load Stripe Elements CardElement
-  - Confirm card payment
-  - Webhook handler for payment completion
+  - Display invoice information
+  - Show invoice payment status
+  - No external payment provider flow in the current version
 - **Frontend API:**
-  - `POST /api/billing/stripe/create-payment-intent?invoice_id=X` — get client_secret
-  - Stripe Elements integration using `@stripe/react-stripe-js`
+  - `GET /api/billing/invoices` — list invoices
 - **Backend Webhook:**
-  - `POST /api/billing/stripe/webhook` — handles `payment_intent.succeeded` event
-  - Updates invoice status to `PAID` when webhook fires
+  - No external webhook required for the current invoice flow
 
 ### ✅ Route Registration
 - **Location:** [frontend/src/App.jsx](frontend/src/App.jsx)
@@ -106,13 +103,11 @@ Phase 7 is **COMPLETE**. Implemented all staff-facing frontend pages with full A
 
 ### ✅ Infrastructure & Configuration
 - **Cloudinary:** Server-side upload endpoint integrated
-- **Stripe:** Payment Intent creation and webhook handling
+- **Billing:** Invoice status handling and webhook support
 - **Dependencies Installed:**
-  - Backend: `cloudinary`, `stripe`
-  - Frontend: `@stripe/stripe-js`, `@stripe/react-stripe-js` (already in package.json)
+  - Backend: `cloudinary`
 - **Environment Variables:**
-  - Backend: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `CLOUDINARY_*`
-  - Frontend: `VITE_STRIPE_PUBLISHABLE_KEY`
+  - Backend: `CLOUDINARY_*`
 
 ## Testing Instructions
 
@@ -150,7 +145,7 @@ python test_integration.py
    - Login as admin/parent
    - Go to `/invoices`
    - Click an invoice
-   - Fill Stripe test card: `4242 4242 4242 4242`
+   - No external payment provider test card required for current version
    - Any future expiry date and any 3-digit CVC
    - Confirm payment
 
@@ -172,7 +167,7 @@ Tests:
 - `frontend/src/pages/Attendance.jsx` — Attendance check-in/out
 - `frontend/src/pages/DailyLog.jsx` — Daily log form (7 sections)
 - `frontend/src/pages/StaffMessages.jsx` — Messaging interface
-- `frontend/src/pages/InvoicePay.jsx` — Payment form with Stripe
+- `frontend/src/pages/InvoicePay.jsx` — Invoice payment page
 - `test_integration.py` — Integration test suite
 - `TESTING_GUIDE.md` — Detailed testing documentation
 - `QUICKSTART.bat` — Windows setup script
@@ -180,8 +175,8 @@ Tests:
 ### Modified Files
 - `frontend/src/App.jsx` — Added staff routes and payment routes
 - `frontend/src/components/ProtectedRoute.jsx` — Support for array of roles
-- `backend/app/routers/media_messaging_billing.py` — Added Stripe webhook handler
-- `backend/app/core/config.py` — Added Stripe webhook secret config
+- `backend/app/routers/media_messaging_billing.py` — Added billing endpoint updates
+- `backend/app/core/config.py` — Updated application configuration
 
 ## Next Steps: Phase 8 (Parent Pages)
 - Parent Dashboard (child feed, announcements)
@@ -200,7 +195,7 @@ Tests:
 - QR scanner is a placeholder (can integrate `qr-code-reader` npm package)
 - Message pagination not implemented (can add `limit` param)
 - WebSocket live updates not yet connected (Phase 10)
-- Stripe requires test keys for testing
+- No external payment provider test keys required for current version
 - Payment confirmation only via webhook (no polling fallback)
 
 ## Validation Checklist
@@ -209,12 +204,12 @@ Tests:
 - ✓ Attendance check-in/out working
 - ✓ Daily log 7-section form complete
 - ✓ Messages UI wired to API
-- ✓ Stripe payment flow end-to-end
+- ✓ Invoice flow end-to-end
 - ✓ Webhook handler for payment confirmation
 - ✓ Protected routes with role checking
 - ✓ ProtectedRoute updated for multiple roles
 - ✓ Integration tests created
-- ✓ Dependencies installed (cloudinary, stripe)
+- ✓ Dependencies installed (cloudinary)
 - ✓ Environment variables documented
 - ✓ Testing guide provided
 - ✓ Quick start script created

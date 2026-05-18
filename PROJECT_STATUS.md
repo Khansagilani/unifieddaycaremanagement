@@ -37,7 +37,7 @@
 - **Health & Daily Logs** (20+ endpoints): Attendance, medications, vaccinations, incidents
 - **Media** (3 endpoints): Cloudinary upload integration
 - **Messaging** (3 endpoints): Conversations and messages
-- **Billing** (6 endpoints): Fee plans, invoices, Stripe integration
+- **Billing** (6 endpoints): Fee plans, invoices
 
 ### Phase 5: WebSocket Support ✅
 **Status:** COMPLETE
@@ -62,7 +62,7 @@
 - Attendance (check-in/out functionality)
 - Daily Log (meals, diapers, activities, naps)
 - Staff Messages (communication with parents)
-- Invoice Payment (Stripe integration)
+- Invoice Payment
 
 ### Phase 8: Parent Pages ✅
 **Status:** COMPLETE
@@ -142,7 +142,7 @@
 ### Billing & Payments
 - ✅ Fee plan management
 - ✅ Invoice generation
-- ✅ Stripe payment integration
+- ✅ Invoice management
 - ✅ Payment intent handling
 
 ### Admin Features
@@ -168,7 +168,7 @@
 - **Database:** PostgreSQL
 - **Authentication:** JWT + bcrypt
 - **Real-time:** WebSockets
-- **Payments:** Stripe API
+- **Payments:** Invoice management
 - **Media:** Cloudinary integration
 
 ### Frontend
@@ -183,7 +183,7 @@
 - **Development:** Local (localhost:8000 backend, localhost:5173 frontend)
 - **Database:** PostgreSQL (local or remote)
 - **Media Storage:** Cloudinary (cloud)
-- **Payments:** Stripe (cloud)
+- **Payments:** Invoice management
 
 ---
 
@@ -198,7 +198,7 @@
 | Health/Daily | 20+ | logs, attendance, medications, vaccinations |
 | Media | 3 | upload, list |
 | Messaging | 3 | conversations, messages |
-| Billing | 6 | fee-plans, invoices, Stripe |
+| Billing | 6 | fee-plans, invoices |
 | WebSocket | 1 | Real-time updates |
 
 ---
@@ -248,7 +248,7 @@
 
 ### ⚠️ Needs Configuration
 - Database credentials (.env file)
-- Stripe API keys (.env file)
+- Optional payment configuration (.env file)
 - Cloudinary credentials (.env file)
 - CORS configuration for production
 - HTTPS setup

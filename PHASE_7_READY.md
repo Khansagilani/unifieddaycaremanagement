@@ -11,13 +11,13 @@
 2. **Attendance System** (`/staff/attendance`) - Check-in/check-out
 3. **Daily Log** (`/staff/daily-log`) - 7-section activity form
 4. **Messaging** (`/staff/messages`) - Staff-parent communication
-5. **Payment Form** (`/invoices/:id/pay`) - Stripe integration
+5. **Payment Form** (`/invoices/:id/pay`) - Invoice details view
 
 #### Payment System
-- Frontend Stripe Elements integration
-- Backend PaymentIntent API
-- Webhook handler for payment confirmation
-- Invoice status updates
+- Frontend invoice details display
+- Backend invoice listing API
+- No external payment provider flow in current version
+- Invoice status updates managed by backend
 
 ### Statistics
 - **Files Created:** 5 new React components + webhook + tests + docs
@@ -35,13 +35,13 @@
 - ✅ `frontend/src/pages/Attendance.jsx` (82 lines) - Check-in/out
 - ✅ `frontend/src/pages/DailyLog.jsx` (164 lines) - 7-section form
 - ✅ `frontend/src/pages/StaffMessages.jsx` (113 lines) - Messaging
-- ✅ `frontend/src/pages/InvoicePay.jsx` (42 lines) - Stripe payment
+- ✅ `frontend/src/pages/InvoicePay.jsx` (42 lines) - Invoice payment
 - ✅ `frontend/src/App.jsx` (updated) - 8 new routes
 - ✅ `frontend/src/components/ProtectedRoute.jsx` (updated) - Multi-role support
 
 ### Backend (FastAPI)
 - ✅ `backend/app/routers/media_messaging_billing.py` (+45 lines) - Webhook
-- ✅ `backend/app/core/config.py` (updated) - Stripe config
+- ✅ `backend/app/core/config.py` (updated) - Application config
 - ✅ `backend/main.py` (verified) - Webhook route registered
 
 ### Testing & Documentation
@@ -63,7 +63,7 @@
 QUICKSTART.bat
 
 # Install dependencies
-cd backend && pip install cloudinary stripe
+cd backend && pip install cloudinary
 cd ../frontend && npm install
 ```
 
@@ -101,10 +101,7 @@ Parent:  parent@nestcare.com / password123
 
 ## 💳 Test Payment
 
-**Stripe Test Card:**
-- Number: 4242 4242 4242 4242
-- Expiry: Any future date (e.g., 12/25)
-- CVC: Any 3 digits (e.g., 123)
+Payment is not processed through an external payment provider in the current version.
 
 ---
 
@@ -115,8 +112,8 @@ Parent:  parent@nestcare.com / password123
 - [x] Daily Log 7 sections complete
 - [x] Messages interface functional
 - [x] Child profile read-only integration
-- [x] Stripe payment flow end-to-end
-- [x] Webhook handler for confirmations
+- [x] Invoice display flow implemented
+- [x] Payment status handling documented
 - [x] Protected routes with role checks
 - [x] ProtectedRoute multi-role support
 - [x] Integration tests created
@@ -139,7 +136,7 @@ GET    /staff/messages                 → StaffMessages
 
 ### Payment Routes (NEW - Phase 7)
 ```
-GET    /invoices/:id/pay               → InvoicePay (Stripe)
+GET    /invoices/:id/pay               → InvoicePay
 ```
 
 ### Shared Routes
@@ -177,8 +174,7 @@ POST   /api/media/conversations/:id/messages → Send message
 
 ### Payment (NEW)
 ```
-POST   /api/billing/stripe/create-payment-intent
-POST   /api/billing/stripe/webhook     → Webhook handler
+POST   /api/billing/invoices              → Create/list invoices
 ```
 
 ---
@@ -188,7 +184,7 @@ POST   /api/billing/stripe/webhook     → Webhook handler
 ✓ JWT authentication (15 min access token, 7 day refresh)
 ✓ Role-based access control (STAFF, ADMIN, PARENT)
 ✓ Protected routes with authorization checks
-✓ Stripe webhook signature verification
+✓ Webhook signature verification
 ✓ Axios auto-refresh on 401
 ✓ CORS configured for localhost:5173
 ✓ Environment secrets not in code
@@ -257,12 +253,12 @@ POST   /api/billing/stripe/webhook     → Webhook handler
 | Attendance | ✅ Complete | QR placeholder ready for enhancement |
 | Daily Log | ✅ Complete | All 7 sections working |
 | Messaging | ✅ Complete | Real-time ready (Phase 10) |
-| Stripe Payment | ✅ Complete | Webhook configured |
+| Invoice Payment | ✅ Complete | Webhook configured |
 | Backend API | ✅ Complete | All endpoints implemented |
 | Frontend Routes | ✅ Complete | Protected and authorized |
 | Documentation | ✅ Complete | Comprehensive guides |
 | Testing | ✅ Complete | Integration test suite |
-| Dependencies | ✅ Complete | cloudinary, stripe installed |
+| Dependencies | ✅ Complete | cloudinary installed |
 
 ---
 

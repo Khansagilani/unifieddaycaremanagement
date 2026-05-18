@@ -16,7 +16,6 @@ from app.utils.response import success_response, error_response
 from app.core.config import settings
 import cloudinary
 import cloudinary.uploader
-import stripe
 import json
 
 cloudinary.config(
@@ -24,8 +23,6 @@ cloudinary.config(
     api_key=settings.CLOUDINARY_API_KEY,
     api_secret=settings.CLOUDINARY_API_SECRET,
 )
-
-stripe.api_key = getattr(settings, "STRIPE_SECRET_KEY", None)
 
 router = APIRouter(prefix="/api/media", tags=["media"])
 
@@ -170,58 +167,3 @@ def list_invoices(
             query = query.filter(Invoice.child_id.in_(child_ids))
     invoices = query.order_by(Invoice.created_at.desc()).all()
     return success_response([InvoiceResponse.from_orm(i) for i in invoices])
-
-
-@billing_router.post("/stripe/create-payment-intent", response_model=dict)
-def create_payment_intent(
-    invoice_id: int,
-    current_user: User = Depends(require_role(["ADMIN", "STAFF", "PARENT"])),
-    db: Session = Depends(get_db)
-):
-    """Create Stripe payment intent for an invoice"""
-    if not stripe.api_key:
-        return error_response("STRIPE_NOT_CONFIGURED", "Stripe is not configured on the server")
-    inv = db.query(Invoice).filter_by(id=invoice_id).first()
-    if not inv:
-        return error_response("INVOICE_NOT_FOUND", "Invoice not found")
-    amount = int(getattr(inv, 'amount_cents', 0) or 0)
-    try:
-        intent = stripe.PaymentIntent.create(
-            amount=amount,
-            currency="usd",
-            metadata={"invoice_id": str(inv.id)}
-        )
-        return success_response({"client_secret": intent.client_secret})
-    except Exception as e:
-        return error_response("STRIPE_ERROR", str(e))
-
-
-@billing_router.post("/stripe/webhook", response_model=dict)
-async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
-    """Stripe webhook handler for payment completion"""
-    webhook_secret = getattr(settings, "STRIPE_WEBHOOK_SECRET", None)
-    if not webhook_secret:
-        return error_response("WEBHOOK_NOT_CONFIGURED", "Webhook secret not configured")
-
-    sig_header = request.headers.get("stripe-signature", "")
-    body = await request.body()
-
-    try:
-        event = stripe.Webhook.construct_event(
-            body, sig_header, webhook_secret)
-    except ValueError:
-        return error_response("INVALID_PAYLOAD", "Invalid payload")
-    except stripe.error.SignatureVerificationError:
-        return error_response("INVALID_SIGNATURE", "Invalid signature")
-
-    if event["type"] == "payment_intent.succeeded":
-        pi = event["data"]["object"]
-        invoice_id = pi.get("metadata", {}).get("invoice_id")
-        if invoice_id:
-            inv = db.query(Invoice).filter_by(id=int(invoice_id)).first()
-            if inv:
-                inv.status = "PAID"
-                inv.paid_at = db.func.now()
-                db.commit()
-
-    return success_response({}, "Webhook processed")

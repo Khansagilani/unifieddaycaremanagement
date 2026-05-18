@@ -13,7 +13,7 @@ set WORKSPACE_DIR=%~dp0
 
 echo [1/4] Installing Backend Dependencies...
 cd /d "%WORKSPACE_DIR%backend"
-pip install -q cloudinary stripe python-stripe 2>nul
+pip install -q cloudinary python-dotenv 2>nul
 if %ERRORLEVEL% EQU 0 (
     echo ✓ Backend dependencies installed
 ) else (
@@ -42,8 +42,6 @@ if not exist .env (
         echo CLOUDINARY_CLOUD_NAME=
         echo CLOUDINARY_API_KEY=
         echo CLOUDINARY_API_SECRET=
-        echo STRIPE_SECRET_KEY=sk_test_
-        echo STRIPE_WEBHOOK_SECRET=whsec_
         echo FRONTEND_URL=http://localhost:5173
         echo API_URL=http://localhost:8000
     ) > .env
@@ -56,7 +54,7 @@ REM Create frontend .env.local
 cd /d "%WORKSPACE_DIR%frontend"
 if not exist .env.local (
     (
-        echo VITE_STRIPE_PUBLISHABLE_KEY=pk_test_
+        echo # No external payment provider key required for local invoice flow
     ) > .env.local
     echo ✓ Frontend .env.local created
 ) else (
@@ -70,9 +68,9 @@ echo ╔════════════════════════
 echo ║                   NEXT STEPS:                              ║
 echo ╠════════════════════════════════════════════════════════════╣
 echo ║                                                            ║
-echo ║  1. Add Stripe Keys to .env files:                        ║
-echo ║     - Backend: STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET║
-echo ║     - Frontend: VITE_STRIPE_PUBLISHABLE_KEY               ║
+echo ║  1. Fill in required .env values:                         ║
+echo ║     - Backend: DATABASE_URL, SECRET_KEY, CLOUDINARY_*      ║
+echo ║     - Frontend: No external payment provider key required   ║
 echo ║                                                            ║
 echo ║  2. Run in separate terminals:                            ║
 echo ║     Terminal 1: cd backend && python -m uvicorn app.main:app --reload
@@ -91,11 +89,7 @@ echo ║  - Admin: admin@nestcare.com / password123                ║
 echo ║  - Staff: staff@nestcare.com / password123                ║
 echo ║  - Parent: parent@nestcare.com / password123              ║
 echo ║                                                            ║
-echo ║  Test Card (Stripe):                                      ║
-echo ║  - Number: 4242 4242 4242 4242                            ║
-echo ║  - Expiry: Any future date (e.g., 12/25)                  ║
-echo ║  - CVC: Any 3 digits (e.g., 123)                          ║
-echo ║                                                            ║
+
 echo ╚════════════════════════════════════════════════════════════╝
 echo.
 pause

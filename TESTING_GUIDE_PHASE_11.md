@@ -47,7 +47,6 @@ test('loads stats on mount', async () => {
    - POST /api/billing/fee-plans - create fee plan
    - GET /api/billing/fee-plans - list fee plans
    - POST /api/billing/invoices - create invoice
-   - POST /api/billing/stripe/create-payment-intent - Stripe integration
 
 5. **Messaging**
    - POST /api/messages/conversations - create conversation
@@ -73,7 +72,7 @@ test('loads stats on mount', async () => {
 - [ ] Parent logs in and sees enrolled children
 - [ ] View child activity feed with media/logs
 - [ ] Send messages to staff (real-time)
-- [ ] View and pay invoices via Stripe
+- [ ] View invoices
 - [ ] Receive live notifications
 
 ### Admin Workflow
@@ -105,7 +104,6 @@ test('loads stats on mount', async () => {
 - [ ] SQL injection prevention in queries
 - [ ] CORS properly configured
 - [ ] Sensitive data not logged
-- [ ] Stripe keys not exposed in frontend
 - [ ] Password hashed with bcrypt
 - [ ] WebSocket token validation
 

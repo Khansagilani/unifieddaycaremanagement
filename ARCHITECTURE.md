@@ -71,7 +71,7 @@
 │  │  • /children                → ChildrenList                 │ │    │
 │  │  • /children/:id            → ChildDetail (read-only)      │ │    │
 │  │  • /invoices                → AdminInvoices                │ │    │
-│  │  • /invoices/:id/pay        → InvoicePay (Stripe)          │ │    │
+│  │  • /invoices/:id/pay        → InvoicePay                    │ │    │
 │  │                                                              │ │    │
 │  └──────────────────────────────────────────────────────────────┘ │    │
 │                          │                                         │    │
@@ -117,8 +117,7 @@
 │  │                                                              │ │    │
 │  │  Billing & Payment Endpoints:                              │ │    │
 │  │  • GET    /api/billing/invoices                            │ │    │
-│  │  • POST   /api/billing/stripe/create-payment-intent [NEW]  │ │    │
-│  │  • POST   /api/billing/stripe/webhook            [NEW]     │ │    │
+│  │  • POST   /api/billing/invoices                  [NEW]     │ │    │
 │  │                                                              │ │    │
 │  │  WebSocket:                                                │ │    │
 │  │  • WS     /ws                  (token query param)         │ │    │
@@ -129,9 +128,9 @@
 │  ┌──────────────────────────────────────┐    ┌─────────────────────┐   │
 │  │      DATABASE (PostgreSQL)           │    │  External Services  │   │
 │  ├──────────────────────────────────────┤    ├─────────────────────┤   │
-│  │  • Users (admin/staff/parent)        │    │  • Stripe API       │   │
-│  │  • Children & Profiles               │    │    (Payment Intent) │   │
-│  │  • Daily Logs & Entries              │    │    (Webhook)        │   │
+│  │  • Users (admin/staff/parent)        │    │  • Billing service  │   │
+│  │  • Children & Profiles               │    │    (Invoices)      │   │
+│  │  • Daily Logs & Entries              │    │    (Status updates)│   │
 │  │  • Attendance Records                │    │                     │   │
 │  │  • Conversations & Messages          │    │  • Cloudinary API   │   │
 │  │  • Invoices & Fee Plans              │    │    (Media Upload)   │   │
@@ -143,10 +142,10 @@
 └────────────────────────────────────────────────────────────────────────────┘
 
 
-STRIPE PAYMENT FLOW (Phase 7 New)
+INVOICE FLOW (Phase 7 New)
 ═════════════════════════════════
 
-Frontend User                    Frontend React Component        Backend FastAPI         Stripe API
+Frontend User                    Frontend React Component        Backend FastAPI         Billing Service
      │                                  │                             │                    │
      │ 1. Click Invoice                │                             │                    │
      ├──────────────────────────────────>                             │                    │
@@ -159,40 +158,17 @@ Frontend User                    Frontend React Component        Backend FastAPI
      │                                  <────────────────────────────┤                    │
      │                                  │    Invoice Data             │                    │
      │                                  │                             │                    │
-     │                          4. Call create-payment-intent       │                    │
+     │                          4. Display Invoice Info             │                    │
+     │                                  │                             │                    │
+     │                          5. Review Payment Status            │                    │
+     │                                  │                             │                    │
+     │                          6. Confirm Billing Workflow          │                    │
      │                                  ├────────────────────────────>                    │
-     │                                  │  POST /stripe/create-intent │                    │
-     │                                  │                             ├───────────────────>
-     │                                  │                             │  Create PaymentIntent
-     │                                  │                             <───────────────────┤
-     │                                  │                             │  client_secret
-     │                                  <────────────────────────────┤                    │
-     │                                  │    {client_secret}          │                    │
+     │                                  │   POST /api/billing/invoices │                    │
      │                                  │                             │                    │
-     │                          5. Load Stripe Elements              │                    │
      │                                  │                             │                    │
-     │ 6. Enter Card Details           │                             │                    │
-     ├──────────────────────────────────>                             │                    │
      │                                  │                             │                    │
-     │                          7. Confirm Card Payment              │                    │
-     │                                  ├────────────────────────────────────────────────>
-     │                                  │  confirmCardPayment(client_secret, card)        │
-     │                                  │                             │                    │
-     │ 8. Payment Confirmed            │<────────────────────────────────────────────────┤
-     <──────────────────────────────────┤                             │  payment_intent
-     │                                  │                             │    succeeded
-     │                                  │                             │                    │
-     │                                  │                             │ 9. Webhook        │
-     │                                  │                             │    Notification   │
-     │                                  │                             <───────────────────┤
-     │                                  │                             │ POST /webhook      │
-     │                                  │                             │ (payment_intent.   │
-     │                                  │                             │  succeeded)        │
-     │                                  │                             │                    │
-     │                                  │ 10. Update Invoice Status  │                    │
-     │                                  │     to PAID                 │                    │
-     │                                  │                             │                    │
-     │ 11. Show Success Message        │                             │                    │
+     │ 7. Show Success Message         │                             │                    │
      │<──────────────────────────────────                             │                    │
      │                                  │                             │                    │
 
@@ -233,7 +209,7 @@ frontend/
 │   │   ├── ChildrenList.jsx          [Children list]
 │   │   ├── ChildDetail.jsx           [Child profile + upload]
 │   │   ├── AdminInvoices.jsx         [Invoices list]
-│   │   ├── InvoicePay.jsx            [Stripe payment] ← NEW
+│   │   ├── InvoicePay.jsx            [Invoice payment] ← NEW
 │   │   ├── StaffDashboard.jsx        [Dashboard] ← NEW
 │   │   ├── Attendance.jsx            [Check-in/out] ← NEW
 │   │   ├── DailyLog.jsx              [7-section form] ← NEW
@@ -302,7 +278,7 @@ QUICKSTART.bat                [Windows setup script]
 ✓ Backend: FastAPI production-ready with CORS, error handling, logging
 ✓ Frontend: React compiled, routing configured, auth flows tested
 ✓ Database: PostgreSQL schema complete with 40+ tables
-✓ Stripe: Webhook handler ready for production (needs real keys)
+✓ Billing webhook handler ready for production (needs configuration)
 ✓ Cloudinary: Upload endpoint ready (needs credentials)
 ✓ Documentation: Complete with testing guides and checklists
 

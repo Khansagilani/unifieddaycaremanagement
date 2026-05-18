@@ -231,19 +231,6 @@ Request:
 ### GET /api/billing/invoices
 List invoices (filtered by role)
 
-### POST /api/billing/stripe/create-payment-intent
-Create Stripe payment for invoice
-```json
-Request:
-{
-  "invoice_id": 1
-}
-
-Response:
-{
-  "client_secret": "pi_xxxxx"
-}
-```
 
 ## WebSocket Endpoint
 

@@ -91,21 +91,7 @@ class NestCareTestSuite:
             invoice_id = invoice.get("id")
             print(
                 f"  Invoice #{invoice.get('invoice_number')}: ${invoice.get('amount_cents')/100:.2f}")
-
-            # 3. Create payment intent
-            print(f"\n→ Creating Stripe payment intent...")
-            response = self.session.post(
-                f"{BASE_URL}/api/billing/stripe/create-payment-intent",
-                params={"invoice_id": invoice_id}
-            )
-            self.test(
-                f"Create payment intent (HTTP {response.status_code})", response.status_code == 200)
-
-            if response.status_code == 200:
-                data = response.json().get("data", {})
-                client_secret = data.get("client_secret")
-                self.test(f"Client secret received", bool(client_secret))
-                print(f"  Client secret: {client_secret[:20]}...")
+            self.test("Invoice has valid ID", bool(invoice_id))
 
     def test_staff_pages_data(self):
         """Test that staff pages can fetch required data"""

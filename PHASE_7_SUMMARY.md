@@ -29,19 +29,18 @@ Five complete, production-ready staff pages with full API integration:
    - Send/receive with timestamps
    - Role-aware message display
 
-5. **Stripe Payment Integration**
-   - Frontend payment form with Stripe Elements
-   - Backend PaymentIntent creation
-   - Webhook handler for payment confirmation
-   - Invoice status updates to PAID
+5. **Invoice Payment Integration**
+   - Frontend invoice detail view
+   - Backend invoice listing and status handling
+   - No external payment provider flow in current version
 
 ### Supporting Infrastructure
 
 - **ProtectedRoute Enhancement** — Now supports multiple roles
 - **Route Registration** — All staff pages wired to App.jsx
-- **Stripe Webhook** — Handles payment_intent.succeeded events
-- **Environment Configuration** — Stripe secrets added to config
-- **Dependencies** — cloudinary, stripe packages installed
+- **Webhook** — Handles payment-related events
+- **Environment Configuration** — Cloudinary and app config
+- **Dependencies** — cloudinary installed
 - **Testing Tools** — Integration test suite + quick start script
 
 ## Architecture
@@ -52,17 +51,15 @@ Frontend (React + Vite)
 ├── Attendance.jsx              [Check-in/out]
 ├── DailyLog.jsx                [7-section form]
 ├── StaffMessages.jsx           [Messaging UI]
-├── InvoicePay.jsx              [Stripe payment]
+├── InvoicePay.jsx              [Invoice payment]
 └── App.jsx                     [Routes + role checks]
 
 Backend (FastAPI)
 ├── routers/media_messaging_billing.py
-│   ├── POST /api/billing/stripe/create-payment-intent
-│   └── POST /api/billing/stripe/webhook  [←NEW: Payment webhook]
+│   └── /api/billing endpoints for fee plans and invoices
 ├── core/config.py
-│   ├── STRIPE_SECRET_KEY       [←NEW]
-│   └── STRIPE_WEBHOOK_SECRET   [←NEW]
-└── main.py                     [Webhook route registered]
+│   └── Cloudinary and application config
+└── main.py                     [API routes registered]
 
 Database
 └── Invoice table updated with payment status
@@ -95,9 +92,8 @@ Database
 - `POST /api/media/conversations/{id}/messages` — Send message
 
 ### Payment
-- `POST /api/billing/stripe/create-payment-intent` — PaymentIntent (Client Secret)
-- `POST /api/billing/stripe/webhook` — Webhook (Payment confirmation)
-- Stripe Elements CardElement — Frontend payment form
+- `POST /api/billing/invoices` — Create invoice
+- `GET /api/billing/invoices` — List invoices
 
 ## Test Flow
 
@@ -127,7 +123,6 @@ python test_integration.py
 
 ✓ JWT token validation on all protected routes
 ✓ Role-based access control (STAFF only for `/staff/*`)
-✓ Stripe webhook signature verification
 ✓ Token in Authorization header (Bearer scheme)
 ✓ Refresh token on 401 (Axios interceptor)
 ✓ CORS configured for localhost:5173
@@ -161,7 +156,7 @@ python test_integration.py
 | 4. Seed Data | ✓ Complete | Test users, children, logs |
 | 5A. Children | ✓ Complete | Full CRUD + sub-profiles |
 | 5B. Health/Daily | ✓ Complete | Logs, attendance, incidents |
-| 5C. Media/Msg/Bill | ✓ Complete | WebSocket, Cloudinary, Stripe |
+| 5C. Media/Msg/Bill | ✓ Complete | WebSocket, Cloudinary, Billing |
 | 6. Frontend Scaffold | ✓ Complete | Vite, React, auth, routes |
 | **7. Staff Pages** | ✓ **COMPLETE** | Dashboard, Attendance, Log, Messages, Payment |
 | 8. Parent Pages | ⏳ Next | Dashboard, Feed, Messages, Invoices |
@@ -174,7 +169,7 @@ python test_integration.py
 - Staff Dashboard loads in < 500ms (2 API calls)
 - Attendance page interactive in < 300ms
 - Daily log form: 7 sub-entries submitted in single batch
-- Payment confirmation: < 2s (Stripe Elements)
+- Payment confirmation: < 2s
 - All pages use Axios interceptors for token auto-refresh
 
 ## Next Phase: Phase 8 (Parent Pages)
@@ -193,5 +188,5 @@ Would you like me to proceed with Phase 8 now?
 **Phase 7 Completion Date:** May 18, 2026
 **Lines of Code Added:** ~500 lines frontend + webhook handler
 **Test Coverage:** 10+ integration tests
-**Dependencies Added:** cloudinary, stripe
-**Environment Variables:** STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, VITE_STRIPE_PUBLISHABLE_KEY
+**Dependencies Added:** cloudinary
+**Environment Variables:** CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET

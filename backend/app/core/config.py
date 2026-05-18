@@ -11,8 +11,6 @@ class Settings(BaseSettings):
     CLOUDINARY_CLOUD_NAME: str = ""
     CLOUDINARY_API_KEY: str = ""
     CLOUDINARY_API_SECRET: str = ""
-    STRIPE_SECRET_KEY: str = ""
-    STRIPE_WEBHOOK_SECRET: str = ""
     FRONTEND_URL: str = "http://localhost:5173"
     API_URL: str = "http://localhost:8000"
 

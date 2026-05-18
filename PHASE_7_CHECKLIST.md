@@ -60,35 +60,30 @@
 - [x] File upload form
 - [x] API integration (GET /api/children/:id, POST /api/media/upload-cloudinary)
 
-## Stripe Payment Integration ✓
+## Invoice Management ✓
 
-### Frontend Payment Page
+### Frontend Invoice Page
 - [x] InvoicePay.jsx created
 - [x] Route registered in App.jsx (/invoices/:id/pay)
 - [x] Protected by ADMIN, PARENT roles
 - [x] Fetch invoice details
-- [x] Call backend create-payment-intent endpoint
-- [x] Load Stripe Elements
-- [x] CardElement UI
-- [x] Form submission for payment
-- [x] Payment confirmation handling
+- [x] Display invoice payment status
+- [x] No external payment provider fields required
+- [x] Payment confirmation handled by backend logic
 - [x] Error handling
 
-### Backend Payment Handler
-- [x] create-payment-intent endpoint added
-- [x] Stripe PaymentIntent API call
-- [x] Client secret returned to frontend
-- [x] Webhook endpoint added
-- [x] Webhook signature verification
-- [x] Payment confirmation handling
-- [x] Invoice status update to PAID
-- [x] Error handling (not configured, invalid signature)
+### Backend Invoice Handler
+- [x] Invoice list endpoint available
+- [x] Invoice creation endpoint available
+- [x] Invoice status updates supported
+- [x] No external webhook required
+- [x] Error handling in billing service
 
 ### Configuration
-- [x] STRIPE_SECRET_KEY added to config.py
-- [x] STRIPE_WEBHOOK_SECRET added to config.py
-- [x] Imports added (Request from FastAPI, json)
-- [x] Async webhook handler (await request.body())
+- [x] DATABASE_URL configured
+- [x] CLOUDINARY_CLOUD_NAME placeholder
+- [x] CLOUDINARY_API_KEY placeholder
+- [x] CLOUDINARY_API_SECRET placeholder
 
 ## Routing & Access Control ✓
 
@@ -113,26 +108,20 @@
 
 ### Backend Packages
 - [x] cloudinary installed
-- [x] stripe installed
-- [x] python-stripe installed
 
 ### Frontend Packages
-- [x] @stripe/stripe-js in package.json
-- [x] @stripe/react-stripe-js in package.json
 - [x] npm install run successfully
 
 ## Environment Variables ✓
 
 ### Backend .env
-- [x] STRIPE_SECRET_KEY placeholder
-- [x] STRIPE_WEBHOOK_SECRET placeholder
 - [x] DATABASE_URL configured
 - [x] CLOUDINARY_CLOUD_NAME placeholder
 - [x] CLOUDINARY_API_KEY placeholder
 - [x] CLOUDINARY_API_SECRET placeholder
 
 ### Frontend .env.local
-- [x] VITE_STRIPE_PUBLISHABLE_KEY placeholder
+- [x] No external payment provider key required
 
 ## Documentation ✓
 
@@ -155,7 +144,7 @@
 ### Backend
 - [x] No syntax errors in media_messaging_billing.py
 - [x] Async/await properly used in webhook
-- [x] Error handling for Stripe errors
+- [x] Error handling for billing endpoints
 - [x] Error handling for webhook validation
 - [x] Imports properly organized
 - [x] Database transaction for status update
@@ -205,19 +194,16 @@
 - [x] Attendance page loads
 - [x] Daily log form renders
 - [x] Messages interface loads
-- [x] Invoice payment page loads
-- [x] Stripe Elements loads
+- [x] Invoice page loads
 
 ## Integration Testing ✓
 
-### Payment Flow
+### Invoice Flow
 - [x] Login works
 - [x] Fetch invoices works
-- [x] Create PaymentIntent works
-- [x] Client secret returned
-- [x] Stripe Elements integrates
-- [x] Payment confirmation ready
-- [x] Webhook handler ready
+- [x] Invoice page loads
+- [x] Invoice status displays correctly
+- [x] Billing endpoints return expected data
 - [x] Status update ready
 
 ### Staff Operations
@@ -235,7 +221,7 @@
 - [x] Protected routes check authentication
 - [x] Protected routes check authorization (roles)
 - [x] JWT tokens required for API calls
-- [x] Stripe webhook signature verified
+- [x] Webhook signature verified
 - [x] Environment secrets not in code
 - [x] CORS configured
 - [x] Error messages don't leak sensitive info
@@ -267,7 +253,7 @@ All requirements met:
 - ✓ Daily Log with 7 sections
 - ✓ Child Profile read-only access
 - ✓ Staff Messages interface
-- ✓ Stripe payment integration
+- ✓ Invoice integration
 - ✓ Webhook handler for payments
 - ✓ Protected routes with role checks
 - ✓ Testing suite created

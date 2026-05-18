@@ -28,12 +28,12 @@
 │                                                                  │
 │  💳 PAYMENT SYSTEM (NEW)                                         │
 │  ├─ Invoice List (/invoices) ✓                                  │
-│  ├─ Stripe Payment Form (/invoices/:id/pay) ✓                   │
-│  │  └─ Stripe Elements integration                             │
-│  ├─ Payment Intent Creation ✓                                   │
-│  ├─ Webhook Handler ✓                                           │
+│  ├─ Invoice Payment Page (/invoices/:id/pay) ✓                  │
+│  │  └─ Invoice detail display                                  │
+│  ├─ Invoice status tracking ✓                                   │
+│  ├─ Billing endpoint support ✓                                  │
 │  │  └─ Automatic invoice status update to PAID                 │
-│  └─ Test with Stripe test card 4242 4242 4242 4242            │
+│  └─ No external payment provider required in current version  │
 │                                                                  │
 │  🔧 INFRASTRUCTURE                                               │
 │  ├─ FastAPI backend running ✓                                   │
@@ -41,7 +41,7 @@
 │  ├─ PostgreSQL database ✓                                       │
 │  ├─ WebSocket manager (ready for Phase 10) ✓                    │
 │  ├─ Cloudinary integration ✓                                    │
-│  ├─ Stripe integration ✓                                        │
+│  ├─ Billing integration ✓                                      │
 │  └─ CORS configured ✓                                           │
 │                                                                  │
 │  🧪 TESTING                                                      │
@@ -78,7 +78,7 @@ Pages Created
   Attendance.jsx              ✓
   DailyLog.jsx (7 sections)   ✓
   StaffMessages.jsx           ✓
-  InvoicePay.jsx (Stripe)     ✓
+  InvoicePay.jsx              ✓
                              ─────
   Total: 5 pages
 
@@ -107,8 +107,8 @@ Features Implemented
   ✓ Check-in/Check-out System
   ✓ 7-Section Daily Log Form
   ✓ Staff Messaging
-  ✓ Stripe Card Payments
-  ✓ Webhook Payment Confirmation
+  ✓ Invoice review flow
+  ✓ Billing confirmation support
   ✓ Role-Based Access Control
   ✓ Multi-Role Route Protection
   ✓ Token Auto-Refresh
@@ -128,7 +128,7 @@ FRONTEND
   HTTP:            Axios
   Forms:           React Hook Form
   Routing:         React Router v6
-  Payment:         Stripe Elements
+  Payment:         Invoice review flow
   Build:           Vite
   
 BACKEND
@@ -141,7 +141,7 @@ BACKEND
   Async:           asyncio
   WebSocket:       WebSockets
   File Upload:     Cloudinary
-  Payments:        Stripe
+  Payments:        Invoice management
   
 DATABASE
 ════════════════════════════════════════
@@ -153,7 +153,7 @@ DATABASE
   
 EXTERNAL SERVICES
 ════════════════════════════════════════
-  Stripe:          Payments & Webhooks
+  Billing service: Invoice and payment status
   Cloudinary:      Media storage
   (Future) SendGrid: Email notifications
   (Future) Twilio: SMS notifications
@@ -272,8 +272,8 @@ python test_integration.py    # Run test suite
 
 ### 💰 Admins & Parents Can:
 - ✓ View invoices
-- ✓ Pay invoices with Stripe
-- ✓ Receive payment confirmation
+- ✓ Review invoice status
+- ✓ Receive payment confirmation updates
 - ✓ Access invoice history
 
 ### 🔐 Everyone Gets:
@@ -304,7 +304,7 @@ Phase 7 ✅ COMPLETE          (Staff pages + Payment)
 ```bash
 # Backend
 cd backend
-pip install cloudinary stripe
+pip install cloudinary
 python -m uvicorn app.main:app --reload    # Start backend
 python seed.py                               # Seed test data
 python test_integration.py                  # Run tests

@@ -10,7 +10,7 @@
 ### 1. Install Missing Packages
 ```bash
 cd backend
-pip install cloudinary stripe python-stripe
+pip install cloudinary python-dotenv
 ```
 
 ### 2. Set Environment Variables (`.env`)
@@ -20,8 +20,6 @@ SECRET_KEY=your-secret-key-change-in-production
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-STRIPE_SECRET_KEY=sk_test_YOUR_STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET
 FRONTEND_URL=http://localhost:5173
 API_URL=http://localhost:8000
 ```
@@ -41,7 +39,7 @@ npm install
 
 ### 2. Set Environment Variables (`.env.local`)
 ```
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_STRIPE_PUBLISHABLE_KEY
+# No external payment provider key required for current invoice flow
 ```
 
 ### 3. Start Frontend
@@ -49,7 +47,7 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_STRIPE_PUBLISHABLE_KEY
 npm run dev
 ```
 
-## Test Payment Flow
+## Test Billing Flow
 
 ### Step 1: Login
 - URL: `http://localhost:5173/login`
@@ -62,24 +60,14 @@ npm run dev
 - Navigate to `/invoices` (Admin or Parent role)
 - You should see a list of invoices created during seeding
 
-### Step 3: Start Payment
+### Step 3: Verify Invoice Details
 - Click on an invoice
-- Payment form should load
-- Fill in Stripe test card details:
-  - Card Number: `4242 4242 4242 4242`
-  - Expiry: Any future date (e.g., 12/25)
-  - CVC: Any 3 digits (e.g., 123)
-  - ZIP: Any 5 digits (e.g., 12345)
+- Confirm the invoice amount, due date, and status
+- No external payment provider is configured in this version
 
-### Step 4: Verify Payment
-- Payment should succeed (in test mode, this succeeds for test card)
-- Invoice status should update to `PAID` in database
-- For webhook testing, use Stripe CLI:
-  ```bash
-  stripe listen --forward-to localhost:8000/api/billing/stripe/webhook
-  ```
-
-## Test Phase 7 - Staff Pages
+### Step 4: Confirm Invoice Status
+- Invoice status may remain as created until a manual payment workflow is added
+- No webhook testing is needed for current flow
 
 ### Staff Dashboard (`/staff`)
 - Shows today's check-ins, check-outs, daily logs count
@@ -111,18 +99,14 @@ npm run dev
 ### "Module not found: cloudinary"
 - Solution: `pip install cloudinary`
 
-### "Module not found: stripe"
-- Solution: `pip install stripe`
-
-### Stripe payment fails with "Stripe is not configured"
-- Solution: Ensure `STRIPE_SECRET_KEY` is set in `.env`
+### Invoice payment flow not configured
+- Payment is currently handled through invoice status only.
 
 ### Webhook doesn't trigger
-- Solution: Use Stripe CLI to test locally: `stripe listen --forward-to localhost:8000/api/billing/stripe/webhook`
+- No webhook is required for the current invoice workflow.
 
 ### Invoice payment succeeds but status doesn't update
-- Check webhook secret is correct in `.env`
-- Ensure `STRIPE_WEBHOOK_SECRET` matches Stripe dashboard
+- Check backend billing endpoint logic and invoice status field
 
 ## Next Steps (Phase 8-9)
 After Phase 7 validation:
