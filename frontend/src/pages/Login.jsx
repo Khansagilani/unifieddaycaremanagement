@@ -2,29 +2,27 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login, me as meApi } from '../api/auth'
 import api from '../api/axios'
-import useAuth from '../hooks/useAuth'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState(null)
     const navigate = useNavigate()
-    const { setUser } = useAuth()
-
     async function handleSubmit(e) {
         e.preventDefault()
         try {
             const res = await login(email, password)
-            const token = res.data.access_token
-            localStorage.setItem('access_token', token)
-            // load user
-            const meRes = await meApi()
-            if (meRes && meRes.data) {
-                setUser(meRes.data)
-            }
-            navigate('/')
+            const token = res.data.data.access_token
+            const user = res.data.data.user
+            useAuth.getState().loginLocal(token, user)  // now using the store, not hook
+            const role = user.role
+            if (role === 'ADMIN') navigate('/admin')
+            else if (role === 'STAFF') navigate('/staff')
+            else if (role === 'PARENT') navigate('/parent')
+            else navigate('/')
         } catch (err) {
-            setError(err.response?.data?.error?.message || 'Login failed')
+            setError(err.response?.data?.detail || 'Login failed')
         }
     }
 

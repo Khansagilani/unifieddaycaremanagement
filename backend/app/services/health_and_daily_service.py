@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from datetime import date, datetime, time, timedelta
 from typing import Optional, List, Tuple
-from app.models.base import Child, Room, Attendance
+from app.models.base import Child, Room
+from app.models.daily_log import Attendance
 from app.models.child import (
     HealthProfile, Medication, MedicationLog, Vaccination, IncidentReport
 )

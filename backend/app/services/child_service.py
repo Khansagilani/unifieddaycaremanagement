@@ -4,7 +4,10 @@ from datetime import date
 from typing import Optional, List
 from app.models.base import Child, Room, AuthorizedPickup, EmergencyContact, ParentChild
 from app.models.child import (
-    Allergy, ChildFoodProfile, ChildPersonality, ChildFear, ChildInterest,
+    Allergy, ChildFoodProfile
+)
+from app.models.child_profile import (
+    ChildPersonality, ChildFear, ChildInterest,
     ChildRoutine, ChildDevelopment, EmotionalSupportPlan
 )
 from app.schemas.children import (
@@ -27,7 +30,7 @@ class ChildService:
         limit: int = 50
     ) -> tuple[List[Child], int]:
         """Get children for center with optional filters"""
-        query = db.query(Child).join(Room).filter(Room.center_id == center_id)
+        query = db.query(Child).filter(Child.center_id == center_id)
 
         if room_id:
             query = query.filter(Child.room_id == room_id)

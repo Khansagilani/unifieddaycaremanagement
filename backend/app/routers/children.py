@@ -26,23 +26,28 @@ router = APIRouter(prefix="/api/children", tags=["children"])
 # Children CRUD
 
 
-@router.get("", response_model=PaginationResponse)
+@router.get("", response_model=dict)
 def list_children(
     current_user: User = Depends(get_current_user),
     room_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
-    skip: int = Query(0, ge=0),
+    page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
     """Get all children for center"""
+    skip = (page - 1) * limit
     children, total = ChildService.get_children(
         db, current_user.center_id, room_id, status, skip, limit
     )
+    total_pages = (total + limit - 1) // limit
     return {
         "success": True,
         "data": [ChildListResponse.from_orm(c) for c in children],
-        "pagination": {"skip": skip, "limit": limit, "total": total}
+        "page": page,
+        "limit": limit,
+        "total": total,
+        "total_pages": total_pages
     }
 
 

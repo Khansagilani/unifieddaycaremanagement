@@ -1,7 +1,6 @@
 from app.routers import ws
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZIPMiddleware
 from app.core.config import settings
 from app.routers import auth
 from app.routers import children
@@ -18,15 +17,17 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL,
-                   "http://localhost:3000", "http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        settings.FRONTEND_URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Add GZIP middleware
-app.add_middleware(GZIPMiddleware, minimum_size=1000)
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])

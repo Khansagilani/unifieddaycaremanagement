@@ -1,4 +1,5 @@
 from typing import Tuple, List, Dict, Any
+from pydantic import BaseModel
 
 
 def paginate(query, page: int = 1, limit: int = 20) -> Tuple[List, Dict]:
@@ -12,3 +13,10 @@ def paginate(query, page: int = 1, limit: int = 20) -> Tuple[List, Dict]:
         "total": total,
         "total_pages": (total + limit - 1) // limit
     }
+
+
+class PaginationResponse(BaseModel):
+    page: int
+    limit: int
+    total: int
+    total_pages: int

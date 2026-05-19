@@ -165,5 +165,5 @@ def list_invoices(
                 user_id=current_user.id).all()
             child_ids = [l.child_id for l in links]
             query = query.filter(Invoice.child_id.in_(child_ids))
-    invoices = query.order_by(Invoice.created_at.desc()).all()
+    invoices = query.order_by(Invoice.issued_at.desc()).all()
     return success_response([InvoiceResponse.from_orm(i) for i in invoices])

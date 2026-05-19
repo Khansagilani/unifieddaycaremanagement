@@ -2,7 +2,8 @@ import api from './axios'
 
 export async function login(email, password) {
     const res = await api.post('/api/auth/login', { email, password })
-    return res.data
+    console.log('LOGIN RESPONSE:', res)
+    return res
 }
 
 export async function refresh() {

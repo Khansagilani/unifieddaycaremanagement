@@ -32,8 +32,16 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 
 def require_roles(*roles):
+    # flatten in case a list is passed e.g. require_role(["ADMIN"])
+    flat_roles = []
+    for r in roles:
+        if isinstance(r, list):
+            flat_roles.extend(r)
+        else:
+            flat_roles.append(r)
+
     def role_checker(current_user: User = Depends(get_current_user)):
-        if current_user.role.value not in roles:
+        if current_user.role.value not in flat_roles:
             raise HTTPException(
                 status_code=403, detail="Insufficient permissions")
         return current_user
@@ -52,3 +60,6 @@ def get_admin_or_staff():
 
 def get_any_authenticated_user():
     return require_roles("ADMIN", "STAFF", "PARENT")
+
+
+require_role = require_roles
