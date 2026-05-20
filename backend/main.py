@@ -6,6 +6,7 @@ from app.routers import auth
 from app.routers import children
 from app.routers import health_and_daily
 from app.routers import media_messaging_billing
+import startup
 
 # Create FastAPI app
 app = FastAPI(
