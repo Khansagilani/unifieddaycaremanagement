@@ -19,9 +19,14 @@ import StaffMessages from './pages/StaffMessages'
 import ParentDashboard from './pages/ParentDashboard'
 import ChildFeed from './pages/ChildFeed'
 import ParentMessages from './pages/ParentMessages'
+import LandingPage from './pages/LandingPage'
+import useAuth from './hooks/useAuth'
 
-function Home() {
-    return <div className="p-6">NestCare Frontend - Home</div>
+function PublicOrDashboard({ role, children }) {
+    const { user } = useAuth()
+    if (!user) return <LandingPage role={role.toLowerCase()} />
+    if (user.role !== role) return <Navigate to="/" replace />
+    return children
 }
 
 export default function App() {
@@ -29,21 +34,22 @@ export default function App() {
         <ErrorBoundary>
             <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<LandingPage role="parent" />} />
+                <Route path="/parents" element={<LandingPage role="parent" />} />
 
                 {/* Staff Routes */}
-                <Route path="/staff" element={<ProtectedRoute role="STAFF"><StaffDashboard /></ProtectedRoute>} />
+                <Route path="/staff" element={<PublicOrDashboard role="STAFF"><StaffDashboard /></PublicOrDashboard>} />
                 <Route path="/staff/attendance" element={<ProtectedRoute role="STAFF"><Attendance /></ProtectedRoute>} />
                 <Route path="/staff/daily-log" element={<ProtectedRoute role="STAFF"><DailyLog /></ProtectedRoute>} />
                 <Route path="/staff/messages" element={<ProtectedRoute role="STAFF"><StaffMessages /></ProtectedRoute>} />
 
                 {/* Parent Routes */}
-                <Route path="/parent" element={<ProtectedRoute role="PARENT"><ParentDashboard /></ProtectedRoute>} />
+                <Route path="/parent" element={<PublicOrDashboard role="PARENT"><ParentDashboard /></PublicOrDashboard>} />
                 <Route path="/parent/feed" element={<ProtectedRoute role="PARENT"><ChildFeed /></ProtectedRoute>} />
                 <Route path="/parent/messages" element={<ProtectedRoute role="PARENT"><ParentMessages /></ProtectedRoute>} />
 
                 {/* Admin Routes */}
-                <Route path="/admin" element={<ProtectedRoute role="ADMIN"><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/admin" element={<PublicOrDashboard role="ADMIN"><AdminDashboard /></PublicOrDashboard>} />
                 <Route path="/admin/children" element={<ProtectedRoute role="ADMIN"><AdminChildren /></ProtectedRoute>} />
                 <Route path="/admin/fee-plans" element={<ProtectedRoute role="ADMIN"><AdminFeePlans /></ProtectedRoute>} />
                 <Route path="/admin/staff" element={<ProtectedRoute role="ADMIN"><AdminStaff /></ProtectedRoute>} />

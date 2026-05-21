@@ -13,10 +13,18 @@ export default function Login() {
         e.preventDefault()
         try {
             const res = await login(email, password)
-            const token = res.data.access_token
-            const user = res.data.user
-            localStorage.setItem('access_token', token)
+
+            // ✅ res.data.data — your API wraps response in { success, data }
+            const token = res.data.data.access_token
+            const user = res.data.data.user
+
+            if (!token || !user) {
+                setError('Invalid response from server')
+                return
+            }
+
             useAuth.getState().loginLocal(token, user)
+
             if (user.role === 'ADMIN') navigate('/admin')
             else if (user.role === 'STAFF') navigate('/staff')
             else if (user.role === 'PARENT') navigate('/parent')
@@ -25,6 +33,7 @@ export default function Login() {
             setError(err.response?.data?.detail || 'Login failed')
         }
     }
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
