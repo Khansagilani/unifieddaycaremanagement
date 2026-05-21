@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from uuid import UUID
 from app.database import get_db
 from app.core.dependencies import get_current_user, require_role
 from app.models.user import User
@@ -29,7 +30,7 @@ router = APIRouter(prefix="/api/children", tags=["children"])
 @router.get("", response_model=dict)
 def list_children(
     current_user: User = Depends(get_current_user),
-    room_id: Optional[int] = Query(None),
+    room_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
@@ -38,7 +39,7 @@ def list_children(
     """Get all children for center"""
     skip = (page - 1) * limit
     children, total = ChildService.get_children(
-        db, current_user.center_id, room_id, status, skip, limit
+        db, current_user.center_id, room_name, status, skip, limit
     )
     total_pages = (total + limit - 1) // limit
     return {
@@ -64,7 +65,7 @@ def create_child(
 
 @router.get("/{child_id}", response_model=dict)
 def get_child(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -78,7 +79,7 @@ def get_child(
 
 @router.get("/{child_id}/profile", response_model=dict)
 def get_child_profile(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -95,7 +96,7 @@ def get_child_profile(
         last_name=child.last_name,
         date_of_birth=child.date_of_birth,
         gender=child.gender,
-        room_id=child.room_id,
+        room_name=child.room_name,
         status=child.status,
         photo_url=child.photo_url,
         enrollment_date=child.enrollment_date,
@@ -116,7 +117,7 @@ def get_child_profile(
         emergency_contacts=[EmergencyContactResponse.from_orm(
             c) for c in child.emergency_contacts],
         created_at=child.created_at,
-        updated_at=child.updated_at
+        updated_at=getattr(child, "updated_at", None)
     )
 
     return success_response(profile)
@@ -124,7 +125,7 @@ def get_child_profile(
 
 @router.put("/{child_id}", response_model=dict)
 def update_child(
-    child_id: int,
+    child_id: UUID,
     child_data: ChildUpdate,
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
@@ -140,7 +141,7 @@ def update_child(
 
 @router.delete("/{child_id}", response_model=dict)
 def delete_child(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
 ):
@@ -155,7 +156,7 @@ def delete_child(
 
 @router.post("/{child_id}/authorized-pickups", response_model=dict)
 def add_authorized_pickup(
-    child_id: int,
+    child_id: UUID,
     pickup_data: AuthorizedPickupCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -171,7 +172,7 @@ def add_authorized_pickup(
 
 @router.get("/{child_id}/authorized-pickups", response_model=dict)
 def get_authorized_pickups(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -183,8 +184,8 @@ def get_authorized_pickups(
 
 @router.delete("/{child_id}/authorized-pickups/{pickup_id}", response_model=dict)
 def remove_authorized_pickup(
-    child_id: int,
-    pickup_id: int,
+    child_id: UUID,
+    pickup_id: UUID,
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
 ):
@@ -199,7 +200,7 @@ def remove_authorized_pickup(
 
 @router.post("/{child_id}/emergency-contacts", response_model=dict)
 def add_emergency_contact(
-    child_id: int,
+    child_id: UUID,
     contact_data: EmergencyContactCreate,
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
@@ -215,7 +216,7 @@ def add_emergency_contact(
 
 @router.get("/{child_id}/emergency-contacts", response_model=dict)
 def get_emergency_contacts(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -229,7 +230,7 @@ def get_emergency_contacts(
 
 @router.post("/{child_id}/allergies", response_model=dict)
 def add_allergy(
-    child_id: int,
+    child_id: UUID,
     allergy_data: AllergyCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -245,7 +246,7 @@ def add_allergy(
 
 @router.get("/{child_id}/allergies", response_model=dict)
 def get_allergies(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -257,8 +258,8 @@ def get_allergies(
 
 @router.delete("/{child_id}/allergies/{allergy_id}", response_model=dict)
 def remove_allergy(
-    child_id: int,
-    allergy_id: int,
+    child_id: UUID,
+    allergy_id: UUID,
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
 ):
@@ -273,7 +274,7 @@ def remove_allergy(
 
 @router.post("/{child_id}/fears", response_model=dict)
 def add_fear(
-    child_id: int,
+    child_id: UUID,
     fear_data: ChildFearCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -289,7 +290,7 @@ def add_fear(
 
 @router.get("/{child_id}/fears", response_model=dict)
 def get_fears(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -300,8 +301,8 @@ def get_fears(
 
 @router.delete("/{child_id}/fears/{fear_id}", response_model=dict)
 def remove_fear(
-    child_id: int,
-    fear_id: int,
+    child_id: UUID,
+    fear_id: UUID,
     current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db)
 ):
@@ -316,7 +317,7 @@ def remove_fear(
 
 @router.post("/{child_id}/interests", response_model=dict)
 def add_interest(
-    child_id: int,
+    child_id: UUID,
     interest_data: ChildInterestCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -332,7 +333,7 @@ def add_interest(
 
 @router.get("/{child_id}/interests", response_model=dict)
 def get_interests(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -346,7 +347,7 @@ def get_interests(
 
 @router.post("/{child_id}/routines", response_model=dict)
 def add_routine(
-    child_id: int,
+    child_id: UUID,
     routine_data: ChildRoutineCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -362,7 +363,7 @@ def add_routine(
 
 @router.get("/{child_id}/routines", response_model=dict)
 def get_routines(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -375,7 +376,7 @@ def get_routines(
 
 @router.put("/{child_id}/personality", response_model=dict)
 def update_personality(
-    child_id: int,
+    child_id: UUID,
     personality_data: ChildPersonalityCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -391,7 +392,7 @@ def update_personality(
 
 @router.get("/{child_id}/personality", response_model=dict)
 def get_personality(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -407,7 +408,7 @@ def get_personality(
 
 @router.put("/{child_id}/food-profile", response_model=dict)
 def update_food_profile(
-    child_id: int,
+    child_id: UUID,
     food_data: ChildFoodProfileCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -423,7 +424,7 @@ def update_food_profile(
 
 @router.get("/{child_id}/food-profile", response_model=dict)
 def get_food_profile(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -439,7 +440,7 @@ def get_food_profile(
 
 @router.put("/{child_id}/development", response_model=dict)
 def update_development(
-    child_id: int,
+    child_id: UUID,
     dev_data: ChildDevelopmentCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -455,7 +456,7 @@ def update_development(
 
 @router.get("/{child_id}/development", response_model=dict)
 def get_development(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -471,7 +472,7 @@ def get_development(
 
 @router.put("/{child_id}/emotional-support-plan", response_model=dict)
 def update_emotional_support_plan(
-    child_id: int,
+    child_id: UUID,
     esp_data: EmotionalSupportPlanCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -487,7 +488,7 @@ def update_emotional_support_plan(
 
 @router.get("/{child_id}/emotional-support-plan", response_model=dict)
 def get_emotional_support_plan(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

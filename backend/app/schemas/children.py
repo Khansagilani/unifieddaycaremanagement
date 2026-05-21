@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime, date
 from enum import Enum
+from uuid import UUID
 
 # Enums
 
@@ -47,8 +48,8 @@ class AuthorizedPickupCreate(BaseModel):
 
 
 class AuthorizedPickupResponse(AuthorizedPickupCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -64,8 +65,8 @@ class EmergencyContactCreate(BaseModel):
 
 
 class EmergencyContactResponse(EmergencyContactCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -81,8 +82,8 @@ class AllergyCreate(BaseModel):
 
 
 class AllergyResponse(AllergyCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -98,8 +99,8 @@ class ChildFearCreate(BaseModel):
 
 
 class ChildFearResponse(ChildFearCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -113,8 +114,8 @@ class ChildInterestCreate(BaseModel):
 
 
 class ChildInterestResponse(ChildInterestCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -129,8 +130,8 @@ class ChildRoutineCreate(BaseModel):
 
 
 class ChildRoutineResponse(ChildRoutineCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -147,8 +148,8 @@ class ChildPersonalityCreate(BaseModel):
 
 
 class ChildPersonalityResponse(ChildPersonalityCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -165,8 +166,8 @@ class ChildDevelopmentCreate(BaseModel):
 
 
 class ChildDevelopmentResponse(ChildDevelopmentCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -183,8 +184,8 @@ class ChildFoodProfileCreate(BaseModel):
 
 
 class ChildFoodProfileResponse(ChildFoodProfileCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -200,8 +201,8 @@ class EmotionalSupportPlanCreate(BaseModel):
 
 
 class EmotionalSupportPlanResponse(EmotionalSupportPlanCreate):
-    id: int
-    child_id: int
+    id: UUID
+    child_id: UUID
     created_at: datetime
 
     class Config:
@@ -210,12 +211,12 @@ class EmotionalSupportPlanResponse(EmotionalSupportPlanCreate):
 
 class ChildProfileResponse(BaseModel):
     """Complete child profile with all sub-resources"""
-    id: int
+    id: UUID
     first_name: str
     last_name: str
     date_of_birth: date
     gender: GenderEnum
-    room_id: int
+    room_name: Optional[str] = None
     status: str
     photo_url: Optional[str]
     enrollment_date: date
@@ -244,24 +245,24 @@ class ChildCreate(BaseModel):
     last_name: str = Field(..., min_length=1, max_length=100)
     date_of_birth: date
     gender: GenderEnum
-    room_id: int
+    room_name: Optional[str] = Field(None, max_length=100)
     enrollment_date: Optional[date] = None
 
 
 class ChildUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    room_id: Optional[int] = None
+    room_name: Optional[str] = Field(None, max_length=100)
     status: Optional[str] = None
 
 
 class ChildListResponse(BaseModel):
-    id: int
+    id: UUID
     first_name: str
     last_name: str
     date_of_birth: date
     gender: GenderEnum
-    room_id: int
+    room_name: Optional[str] = None
     status: str
     photo_url: Optional[str]
     enrollment_date: date
@@ -272,17 +273,17 @@ class ChildListResponse(BaseModel):
 
 
 class ChildResponse(BaseModel):
-    id: int
+    id: UUID
     first_name: str
     last_name: str
     date_of_birth: date
     gender: GenderEnum
-    room_id: int
+    room_name: Optional[str] = None
     status: str
     photo_url: Optional[str]
     enrollment_date: date
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

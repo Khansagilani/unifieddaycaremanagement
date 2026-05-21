@@ -65,6 +65,17 @@ class Child(Base):
     created_at = Column(DateTime(timezone=True),
                         default=lambda: datetime.now(timezone.utc))
 
+    # Relationships
+    personality = relationship("ChildPersonality", uselist=False, back_populates="child")
+    food_profile = relationship("ChildFoodProfile", uselist=False, back_populates="child")
+    development = relationship("ChildDevelopment", uselist=False, back_populates="child")
+    emotional_support_plan = relationship("EmotionalSupportPlan", uselist=False, back_populates="child")
+    allergies = relationship("Allergy", back_populates="child")
+    fears = relationship("ChildFear", back_populates="child")
+    interests = relationship("ChildInterest", back_populates="child")
+    routines = relationship("ChildRoutine", uselist=False, back_populates="child")
+    authorized_pickups = relationship("AuthorizedPickup", back_populates="child")
+    emergency_contacts = relationship("EmergencyContact", back_populates="child")
     class Config:
         from_attributes = True
 
@@ -109,10 +120,12 @@ class AuthorizedPickup(Base):
     full_name = Column(String(255), nullable=False)
     phone = Column(String(50), nullable=False)
     photo_url = Column(String)
-    relationship = Column(String(100))
+    rel_type = Column("relationship", String(100))
     id_type = Column(String(50))
     id_number = Column(String(100))
     is_active = Column(Boolean, default=True)
+    # Relationship
+    child = relationship("Child", back_populates="authorized_pickups")
 
     class Config:
         from_attributes = True
@@ -125,10 +138,12 @@ class EmergencyContact(Base):
     child_id = Column(UUID(as_uuid=True), ForeignKey(
         "children.id", ondelete="CASCADE"), nullable=False)
     full_name = Column(String(255), nullable=False)
-    relationship = Column(String(100))
+    rel_type = Column("relationship", String(100))
     phone_primary = Column(String(50), nullable=False)
     phone_secondary = Column(String(50))
     contact_order = Column(Integer, default=1)
+    # Relationship
+    child = relationship("Child", back_populates="emergency_contacts")
 
     class Config:
         from_attributes = True
@@ -168,3 +183,5 @@ class StaffCertification(Base):
 
     class Config:
         from_attributes = True
+
+

@@ -71,6 +71,8 @@ class ChildFoodProfile(Base):
 
     class Config:
         from_attributes = True
+    # Relationship
+    child = relationship("Child", back_populates="food_profile")
 
 
 class FoodPreference(Base):
@@ -130,6 +132,8 @@ class Allergy(Base):
     epipen_location = Column(Text)
     parent_notified_on_exposure = Column(Boolean, default=True)
     diagnosed_date = Column(DATE)
+    # Relationship
+    child = relationship("Child", back_populates="allergies")
 
     class Config:
         from_attributes = True

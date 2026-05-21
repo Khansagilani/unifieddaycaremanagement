@@ -25,8 +25,10 @@ class ChildPersonality(Base):
     social_style = Column(Text)
     learning_style = Column(Text)
     temperament_notes = Column(Text)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(
-        timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationship
+    child = relationship("Child", back_populates="personality")
 
     class Config:
         from_attributes = True
@@ -49,6 +51,9 @@ class ChildFear(Base):
     triggers = Column(Text)
     coping_strategy = Column(Text)
     staff_notes = Column(Text)
+    
+    # Relationship
+    child = relationship("Child", back_populates="fears")
 
     class Config:
         from_attributes = True
@@ -85,6 +90,9 @@ class ChildInterest(Base):
     enthusiasm_level = Column(SQLEnum(EnthusiasmLevel),
                               default=EnthusiasmLevel.LIKES)
     notes = Column(Text)
+    
+    # Relationship
+    child = relationship("Child", back_populates="interests")
 
     class Config:
         from_attributes = True
@@ -102,8 +110,10 @@ class EmotionalSupportPlan(Base):
     positive_reinforcements = Column(Text)
     behavioral_notes = Column(Text)
     staff_guidance = Column(Text)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(
-        timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationship
+    child = relationship("Child", back_populates="emotional_support_plan")
 
     class Config:
         from_attributes = True
@@ -135,8 +145,10 @@ class ChildRoutine(Base):
     uses_comfort_blanket = Column(Boolean, default=False)
     comfort_blanket_desc = Column(Text)
     special_routines = Column(Text)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(
-        timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationship
+    child = relationship("Child", back_populates="routines")
 
     class Config:
         from_attributes = True
@@ -181,8 +193,10 @@ class ChildDevelopment(Base):
     milestones_achieved = Column(Text)
     areas_to_support = Column(Text)
     staff_observations = Column(Text)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(
-        timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationship
+    child = relationship("Child", back_populates="development")
 
     class Config:
         from_attributes = True

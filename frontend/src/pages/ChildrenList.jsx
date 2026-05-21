@@ -16,7 +16,7 @@ export default function ChildrenList() {
                 {children.map(c => (
                     <Link to={`/children/${c.id}`} key={c.id} className="p-4 bg-white rounded shadow">
                         <div className="font-semibold">{c.first_name} {c.last_name}</div>
-                        <div className="text-sm text-gray-500">Room: {c.room_id}</div>
+                        <div className="text-sm text-gray-500">Room: {c.room_name || 'Not assigned'}</div>
                     </Link>
                 ))}
             </div>

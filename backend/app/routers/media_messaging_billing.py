@@ -123,7 +123,15 @@ def create_fee_plan(
     db: Session = Depends(get_db)
 ):
     fp = BillingService.create_fee_plan(
-        db, current_user.center_id, payload.name, payload.amount_cents, payload.billing_cycle, payload.description)
+        db,
+        current_user.center_id,
+        payload.name,
+        payload.monthly_amount,
+        payload.billing_cycle,
+        payload.registration_fee,
+        payload.sibling_discount,
+        payload.sibling_discount_pct
+    )
     return success_response(FeePlanResponse.from_orm(fp), "Fee plan created")
 
 

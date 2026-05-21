@@ -3,9 +3,11 @@ import api from '../api/axios'
 
 const initialForm = {
     name: '',
-    amount_cents: '',
+    monthly_amount: '',
+    registration_fee: '',
+    sibling_discount: false,
+    sibling_discount_pct: '',
     billing_cycle: 'MONTHLY',
-    description: ''
 }
 
 export default function AdminFeePlans() {
@@ -35,14 +37,16 @@ export default function AdminFeePlans() {
         try {
             await api.post('/api/billing/fee-plans', {
                 name: form.name,
-                amount_cents: Number(form.amount_cents),
+                monthly_amount: Number(form.monthly_amount),
+                registration_fee: form.registration_fee ? Number(form.registration_fee) : undefined,
+                sibling_discount: form.sibling_discount,
+                sibling_discount_pct: form.sibling_discount_pct ? Number(form.sibling_discount_pct) : undefined,
                 billing_cycle: form.billing_cycle,
-                description: form.description || undefined
             })
             setForm(initialForm)
             await loadPlans()
         } catch (err) {
-            setError(err.response?.data?.error?.message || 'Unable to create fee plan')
+            setError(err.response?.data?.error?.message || err.response?.data?.detail || 'Unable to create fee plan')
         }
         setLoading(false)
     }
@@ -59,10 +63,13 @@ export default function AdminFeePlans() {
                     ) : (
                         <div className="space-y-3">
                             {plans.map((plan) => (
-                                <div key={plan.id} className="p-4 border rounded-lg bg-gray-50">
-                                    <div className="font-semibold">{plan.name}</div>
-                                    <div className="text-sm text-gray-600">{(plan.amount_cents / 100).toFixed(2)} USD / {plan.billing_cycle.toLowerCase()}</div>
-                                    <div className="text-sm text-gray-500">{plan.description || 'No description provided.'}</div>
+                                    <div key={plan.id} className="p-4 border rounded-lg bg-gray-50">
+                                        <div className="font-semibold">{plan.name}</div>
+                                    <div className="text-sm text-gray-600">{Number(plan.monthly_amount).toFixed(2)} USD / {plan.billing_cycle.toLowerCase()}</div>
+                                    <div className="text-sm text-gray-500">
+                                        Registration fee: {Number(plan.registration_fee || 0).toFixed(2)} USD
+                                        {plan.sibling_discount ? ` - Sibling discount ${Number(plan.sibling_discount_pct || 0).toFixed(2)}%` : ''}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -83,13 +90,26 @@ export default function AdminFeePlans() {
                             />
                         </div>
                         <div>
-                            <label className="block mb-1">Amount (cents)</label>
+                            <label className="block mb-1">Monthly amount</label>
                             <input
                                 type="number"
+                                min="0"
+                                step="0.01"
                                 className="w-full p-2 border rounded"
-                                value={form.amount_cents}
-                                onChange={(e) => setForm({ ...form, amount_cents: e.target.value })}
+                                value={form.monthly_amount}
+                                onChange={(e) => setForm({ ...form, monthly_amount: e.target.value })}
                                 required
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-1">Registration fee</label>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                className="w-full p-2 border rounded"
+                                value={form.registration_fee}
+                                onChange={(e) => setForm({ ...form, registration_fee: e.target.value })}
                             />
                         </div>
                         <div>
@@ -101,17 +121,33 @@ export default function AdminFeePlans() {
                             >
                                 <option value="MONTHLY">Monthly</option>
                                 <option value="WEEKLY">Weekly</option>
-                                <option value="ANNUAL">Annual</option>
+                                <option value="DAILY">Daily</option>
                             </select>
                         </div>
                         <div>
-                            <label className="block mb-1">Description</label>
-                            <textarea
-                                className="w-full p-2 border rounded"
-                                value={form.description}
-                                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            />
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={form.sibling_discount}
+                                    onChange={(e) => setForm({ ...form, sibling_discount: e.target.checked })}
+                                />
+                                <span>Sibling discount</span>
+                            </label>
                         </div>
+                        {form.sibling_discount && (
+                            <div>
+                                <label className="block mb-1">Sibling discount percent</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    className="w-full p-2 border rounded"
+                                    value={form.sibling_discount_pct}
+                                    onChange={(e) => setForm({ ...form, sibling_discount_pct: e.target.value })}
+                                />
+                            </div>
+                        )}
                         <button type="submit" disabled={loading} className="w-full px-4 py-2 bg-blue-600 text-white rounded">
                             {loading ? 'Saving...' : 'Create Fee Plan'}
                         </button>

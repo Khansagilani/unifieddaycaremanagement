@@ -6,7 +6,7 @@ const initialForm = {
     last_name: '',
     date_of_birth: '',
     gender: 'MALE',
-    room_id: '',
+    room_name: '',
     enrollment_date: ''
 }
 
@@ -40,13 +40,13 @@ export default function AdminChildren() {
                 last_name: form.last_name,
                 date_of_birth: form.date_of_birth,
                 gender: form.gender,
-                room_id: Number(form.room_id),
+                room_name: form.room_name || undefined,
                 enrollment_date: form.enrollment_date || undefined
             })
             setForm(initialForm)
             await loadChildren()
         } catch (err) {
-            setError(err.response?.data?.error?.message || 'Unable to create child')
+            setError(err.response?.data?.error?.message || err.response?.data?.detail || 'Unable to create child')
         }
         setLoading(false)
     }
@@ -65,7 +65,7 @@ export default function AdminChildren() {
                             {children.map((child) => (
                                 <div key={child.id} className="p-4 border rounded-lg bg-gray-50">
                                     <div className="font-semibold">{child.first_name} {child.last_name}</div>
-                                    <div className="text-sm text-gray-600">Room {child.room_id} · {child.gender}</div>
+                                    <div className="text-sm text-gray-600">{child.room_name || 'No room assigned'} · {child.gender}</div>
                                 </div>
                             ))}
                         </div>
@@ -117,12 +117,12 @@ export default function AdminChildren() {
                             </select>
                         </div>
                         <div>
-                            <label className="block mb-1">Room ID</label>
+                            <label className="block mb-1">Room name</label>
                             <input
                                 className="w-full p-2 border rounded"
-                                value={form.room_id}
-                                onChange={(e) => setForm({ ...form, room_id: e.target.value })}
-                                required
+                                placeholder="Toddler Room"
+                                value={form.room_name}
+                                onChange={(e) => setForm({ ...form, room_name: e.target.value })}
                             />
                         </div>
                         <div>

@@ -5,17 +5,30 @@ import asyncio
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
+from decimal import Decimal
+from uuid import UUID
 
 
 class BillingService:
     @staticmethod
-    def create_fee_plan(db: Session, center_id: int, name: str, amount_cents: int, billing_cycle: str, description: str = None) -> FeePlan:
+    def create_fee_plan(
+        db: Session,
+        center_id: UUID,
+        name: str,
+        monthly_amount: Decimal,
+        billing_cycle: str,
+        registration_fee: Optional[Decimal] = None,
+        sibling_discount: bool = False,
+        sibling_discount_pct: Optional[Decimal] = None
+    ) -> FeePlan:
         fp = FeePlan(
             center_id=center_id,
             name=name,
-            amount_cents=amount_cents,
+            monthly_amount=monthly_amount,
+            registration_fee=registration_fee,
+            sibling_discount=sibling_discount,
+            sibling_discount_pct=sibling_discount_pct,
             billing_cycle=billing_cycle,
-            description=description
         )
         db.add(fp)
         db.commit()

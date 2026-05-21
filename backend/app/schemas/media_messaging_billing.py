@@ -1,7 +1,9 @@
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional, List
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
+from uuid import UUID
 
 
 class MediaTypeEnum(str, Enum):
@@ -62,15 +64,16 @@ class MessageResponse(MessageCreate):
 
 class FeePlanCreate(BaseModel):
     name: str
-    amount_cents: int
+    monthly_amount: Decimal
+    registration_fee: Optional[Decimal] = None
+    sibling_discount: bool = False
+    sibling_discount_pct: Optional[Decimal] = None
     billing_cycle: str
-    description: Optional[str] = None
 
 
 class FeePlanResponse(FeePlanCreate):
-    id: int
-    center_id: int
-    created_at: datetime
+    id: UUID
+    center_id: UUID
 
     class Config:
         from_attributes = True

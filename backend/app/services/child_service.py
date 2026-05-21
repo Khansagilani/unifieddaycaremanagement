@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from datetime import date
 from typing import Optional, List
-from app.models.base import Child, Room, AuthorizedPickup, EmergencyContact, ParentChild
+from uuid import UUID
+from app.models.base import Child, AuthorizedPickup, EmergencyContact, ParentChild
 from app.models.child import (
     Allergy, ChildFoodProfile
 )
@@ -23,8 +24,8 @@ class ChildService:
     @staticmethod
     def get_children(
         db: Session,
-        center_id: int,
-        room_id: Optional[int] = None,
+        center_id: UUID,
+        room_name: Optional[str] = None,
         status: Optional[str] = None,
         skip: int = 0,
         limit: int = 50
@@ -32,8 +33,8 @@ class ChildService:
         """Get children for center with optional filters"""
         query = db.query(Child).filter(Child.center_id == center_id)
 
-        if room_id:
-            query = query.filter(Child.room_id == room_id)
+        if room_name:
+            query = query.filter(Child.room_name == room_name)
         if status:
             query = query.filter(Child.status == status)
 
@@ -42,21 +43,22 @@ class ChildService:
         return children, total
 
     @staticmethod
-    def get_child_by_id(db: Session, child_id: int, center_id: int) -> Optional[Child]:
+    def get_child_by_id(db: Session, child_id: UUID, center_id: UUID) -> Optional[Child]:
         """Get child by ID with center isolation"""
-        return db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        return db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
 
     @staticmethod
-    def create_child(db: Session, center_id: int, child_data: ChildCreate) -> Child:
+    def create_child(db: Session, center_id: UUID, child_data: ChildCreate) -> Child:
         """Create new child"""
         child = Child(
+            center_id=center_id,
             first_name=child_data.first_name,
             last_name=child_data.last_name,
             date_of_birth=child_data.date_of_birth,
             gender=child_data.gender,
-            room_id=child_data.room_id,
+            room_name=child_data.room_name,
             status="ACTIVE",
             enrollment_date=child_data.enrollment_date or date.today()
         )
@@ -68,16 +70,12 @@ class ChildService:
             personality = ChildPersonality(child_id=child.id)
             db.add(personality)
 
-        if not db.query(ChildFoodProfile).filter_by(child_id=child.id).first():
-            food_profile = ChildFoodProfile(child_id=child.id)
-            db.add(food_profile)
-
         db.commit()
         db.refresh(child)
         return child
 
     @staticmethod
-    def update_child(db: Session, child_id: int, center_id: int, child_data: ChildUpdate) -> Optional[Child]:
+    def update_child(db: Session, child_id: UUID, center_id: UUID, child_data: ChildUpdate) -> Optional[Child]:
         """Update child information"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -87,8 +85,8 @@ class ChildService:
             child.first_name = child_data.first_name
         if child_data.last_name:
             child.last_name = child_data.last_name
-        if child_data.room_id:
-            child.room_id = child_data.room_id
+        if child_data.room_name:
+            child.room_name = child_data.room_name
         if child_data.status:
             child.status = child_data.status
 
@@ -97,7 +95,7 @@ class ChildService:
         return child
 
     @staticmethod
-    def delete_child(db: Session, child_id: int, center_id: int) -> bool:
+    def delete_child(db: Session, child_id: UUID, center_id: UUID) -> bool:
         """Soft delete child by changing status"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -109,7 +107,7 @@ class ChildService:
 
     # Authorized Pickups
     @staticmethod
-    def add_authorized_pickup(db: Session, child_id: int, center_id: int, pickup_data: AuthorizedPickupCreate) -> Optional[AuthorizedPickup]:
+    def add_authorized_pickup(db: Session, child_id: UUID, center_id: UUID, pickup_data: AuthorizedPickupCreate) -> Optional[AuthorizedPickup]:
         """Add authorized pickup person"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -129,7 +127,7 @@ class ChildService:
         return pickup
 
     @staticmethod
-    def get_authorized_pickups(db: Session, child_id: int, center_id: int) -> List[AuthorizedPickup]:
+    def get_authorized_pickups(db: Session, child_id: UUID, center_id: UUID) -> List[AuthorizedPickup]:
         """Get authorized pickups for child"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -138,7 +136,7 @@ class ChildService:
         return db.query(AuthorizedPickup).filter_by(child_id=child_id).all()
 
     @staticmethod
-    def remove_authorized_pickup(db: Session, pickup_id: int, child_id: int, center_id: int) -> bool:
+    def remove_authorized_pickup(db: Session, pickup_id: UUID, child_id: UUID, center_id: UUID) -> bool:
         """Remove authorized pickup"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -155,7 +153,7 @@ class ChildService:
 
     # Emergency Contacts
     @staticmethod
-    def add_emergency_contact(db: Session, child_id: int, center_id: int, contact_data: EmergencyContactCreate) -> Optional[EmergencyContact]:
+    def add_emergency_contact(db: Session, child_id: UUID, center_id: UUID, contact_data: EmergencyContactCreate) -> Optional[EmergencyContact]:
         """Add emergency contact"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -180,7 +178,7 @@ class ChildService:
         return contact
 
     @staticmethod
-    def get_emergency_contacts(db: Session, child_id: int, center_id: int) -> List[EmergencyContact]:
+    def get_emergency_contacts(db: Session, child_id: UUID, center_id: UUID) -> List[EmergencyContact]:
         """Get emergency contacts for child"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -190,7 +188,7 @@ class ChildService:
 
     # Allergies
     @staticmethod
-    def add_allergy(db: Session, child_id: int, center_id: int, allergy_data: AllergyCreate) -> Optional[Allergy]:
+    def add_allergy(db: Session, child_id: UUID, center_id: UUID, allergy_data: AllergyCreate) -> Optional[Allergy]:
         """Add allergy"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -210,7 +208,7 @@ class ChildService:
         return allergy
 
     @staticmethod
-    def get_allergies(db: Session, child_id: int, center_id: int) -> List[Allergy]:
+    def get_allergies(db: Session, child_id: UUID, center_id: UUID) -> List[Allergy]:
         """Get allergies for child"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -219,7 +217,7 @@ class ChildService:
         return db.query(Allergy).filter_by(child_id=child_id).all()
 
     @staticmethod
-    def remove_allergy(db: Session, allergy_id: int, child_id: int, center_id: int) -> bool:
+    def remove_allergy(db: Session, allergy_id: UUID, child_id: UUID, center_id: UUID) -> bool:
         """Remove allergy"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -236,7 +234,7 @@ class ChildService:
 
     # Fears
     @staticmethod
-    def add_fear(db: Session, child_id: int, center_id: int, fear_data: ChildFearCreate) -> Optional[ChildFear]:
+    def add_fear(db: Session, child_id: UUID, center_id: UUID, fear_data: ChildFearCreate) -> Optional[ChildFear]:
         """Add child fear"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -256,7 +254,7 @@ class ChildService:
         return fear
 
     @staticmethod
-    def get_fears(db: Session, child_id: int, center_id: int) -> List[ChildFear]:
+    def get_fears(db: Session, child_id: UUID, center_id: UUID) -> List[ChildFear]:
         """Get fears for child"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -265,7 +263,7 @@ class ChildService:
         return db.query(ChildFear).filter_by(child_id=child_id).all()
 
     @staticmethod
-    def remove_fear(db: Session, fear_id: int, child_id: int, center_id: int) -> bool:
+    def remove_fear(db: Session, fear_id: UUID, child_id: UUID, center_id: UUID) -> bool:
         """Remove fear"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -282,7 +280,7 @@ class ChildService:
 
     # Interests
     @staticmethod
-    def add_interest(db: Session, child_id: int, center_id: int, interest_data: ChildInterestCreate) -> Optional[ChildInterest]:
+    def add_interest(db: Session, child_id: UUID, center_id: UUID, interest_data: ChildInterestCreate) -> Optional[ChildInterest]:
         """Add child interest"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -300,7 +298,7 @@ class ChildService:
         return interest
 
     @staticmethod
-    def get_interests(db: Session, child_id: int, center_id: int) -> List[ChildInterest]:
+    def get_interests(db: Session, child_id: UUID, center_id: UUID) -> List[ChildInterest]:
         """Get interests for child"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -310,7 +308,7 @@ class ChildService:
 
     # Routines
     @staticmethod
-    def add_routine(db: Session, child_id: int, center_id: int, routine_data: ChildRoutineCreate) -> Optional[ChildRoutine]:
+    def add_routine(db: Session, child_id: UUID, center_id: UUID, routine_data: ChildRoutineCreate) -> Optional[ChildRoutine]:
         """Add child routine"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -329,7 +327,7 @@ class ChildService:
         return routine
 
     @staticmethod
-    def get_routines(db: Session, child_id: int, center_id: int) -> List[ChildRoutine]:
+    def get_routines(db: Session, child_id: UUID, center_id: UUID) -> List[ChildRoutine]:
         """Get routines for child"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -339,7 +337,7 @@ class ChildService:
 
     # Personality
     @staticmethod
-    def update_personality(db: Session, child_id: int, center_id: int, personality_data: ChildPersonalityCreate) -> Optional[ChildPersonality]:
+    def update_personality(db: Session, child_id: UUID, center_id: UUID, personality_data: ChildPersonalityCreate) -> Optional[ChildPersonality]:
         """Update child personality"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -364,7 +362,7 @@ class ChildService:
 
     # Food Profile
     @staticmethod
-    def update_food_profile(db: Session, child_id: int, center_id: int, food_data: ChildFoodProfileCreate) -> Optional[ChildFoodProfile]:
+    def update_food_profile(db: Session, child_id: UUID, center_id: UUID, food_data: ChildFoodProfileCreate) -> Optional[ChildFoodProfile]:
         """Update child food profile"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -389,7 +387,7 @@ class ChildService:
 
     # Development
     @staticmethod
-    def update_development(db: Session, child_id: int, center_id: int, dev_data: ChildDevelopmentCreate) -> Optional[ChildDevelopment]:
+    def update_development(db: Session, child_id: UUID, center_id: UUID, dev_data: ChildDevelopmentCreate) -> Optional[ChildDevelopment]:
         """Update child development"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -414,7 +412,7 @@ class ChildService:
 
     # Emotional Support Plan
     @staticmethod
-    def update_emotional_support_plan(db: Session, child_id: int, center_id: int, esp_data: EmotionalSupportPlanCreate) -> Optional[EmotionalSupportPlan]:
+    def update_emotional_support_plan(db: Session, child_id: UUID, center_id: UUID, esp_data: EmotionalSupportPlanCreate) -> Optional[EmotionalSupportPlan]:
         """Update emotional support plan"""
         child = ChildService.get_child_by_id(db, child_id, center_id)
         if not child:
@@ -438,6 +436,6 @@ class ChildService:
 
     # Get full profile
     @staticmethod
-    def get_child_full_profile(db: Session, child_id: int, center_id: int) -> Optional[Child]:
+    def get_child_full_profile(db: Session, child_id: UUID, center_id: UUID) -> Optional[Child]:
         """Get child with all related data"""
         return ChildService.get_child_by_id(db, child_id, center_id)
