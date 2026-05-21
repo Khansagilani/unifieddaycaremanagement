@@ -51,6 +51,10 @@ export default function AdminChildren() {
         setLoading(false)
     }
 
+    api.post('/api/children/{child_id}/parents', {
+        user_id: parentUserId,
+        relationship: 'MOTHER'
+    })
     return (
         <div className="p-6 max-w-6xl mx-auto">
             <h1 className="text-3xl font-bold mb-6">Child Management</h1>

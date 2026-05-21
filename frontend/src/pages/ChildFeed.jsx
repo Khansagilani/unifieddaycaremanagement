@@ -50,7 +50,7 @@ export default function ChildFeed() {
             }))
 
             // Fetch media for selected child (from child profile)
-            const childRes = await api.get(`/api/children/${selectedChild}`)
+            const childRes = await api.get(`/api/media/children/${selectedChild}`)
             const child = childRes.data.data || {}
             const media = (child.media || []).map(m => ({
                 ...m,
@@ -81,7 +81,7 @@ export default function ChildFeed() {
                 <label className="block text-sm font-semibold mb-2">Select Child</label>
                 <select
                     value={selectedChild || ''}
-                    onChange={(e) => setSelectedChild(parseInt(e.target.value))}
+                    onChange={(e) => setSelectedChild(e.target.value)}
                     className="w-full border rounded p-2 mb-3"
                 >
                     {children.map(c => (

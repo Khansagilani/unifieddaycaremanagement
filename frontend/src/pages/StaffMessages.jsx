@@ -16,7 +16,8 @@ export default function StaffMessages() {
 
     const fetchConversations = async () => {
         try {
-            const res = await api.get('/api/media/conversations')
+            const res = await api.get('/api/messages/conversations')
+
             setConversations(res.data.data || [])
         } catch (err) {
             console.error('Error fetching conversations:', err)
@@ -26,7 +27,7 @@ export default function StaffMessages() {
     const handleSelectConversation = async (convId) => {
         setSelectedConversation(convId)
         try {
-            const res = await api.get(`/api/media/conversations/${convId}/messages`)
+            const res = await api.get(`/api/messages/conversations/${convId}`)
             setMessages(res.data.data || [])
         } catch (err) {
             console.error('Error fetching messages:', err)
@@ -39,9 +40,7 @@ export default function StaffMessages() {
 
         setLoading(true)
         try {
-            await api.post(`/api/media/conversations/${selectedConversation}/messages`, {
-                content: newMessage
-            })
+            await api.post('/api/messages/messages', { conversation_id: selectedConversation, content: newMessage })
             setNewMessage('')
             await handleSelectConversation(selectedConversation)
         } catch (err) {
@@ -67,8 +66,8 @@ export default function StaffMessages() {
                                     key={conv.id}
                                     onClick={() => handleSelectConversation(conv.id)}
                                     className={`w-full text-left p-3 rounded transition ${selectedConversation === conv.id
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-white hover:bg-gray-100 border'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white hover:bg-gray-100 border'
                                         }`}
                                 >
                                     <div className="font-semibold text-sm">{conv.title}</div>
@@ -96,8 +95,8 @@ export default function StaffMessages() {
                                         >
                                             <div
                                                 className={`max-w-xs px-4 py-2 rounded-lg ${msg.sender_id === user?.id
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'bg-gray-200 text-gray-900'
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-gray-200 text-gray-900'
                                                     }`}
                                             >
                                                 <div className="text-sm">{msg.content}</div>

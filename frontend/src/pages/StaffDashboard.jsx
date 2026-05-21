@@ -13,7 +13,9 @@ export default function StaffDashboard() {
                 const childList = childRes.data.data || []
                 setChildren(childList)
 
-                const logsRes = await api.get('/api/health-daily/daily-logs')
+                const logsRes = await api.get(`/api/health/daily-logs/${childList[0]?.id}`, {
+                    params: { start_date: today, end_date: today }
+                })
                 const logList = (logsRes.data.data || []).slice(0, 5)
                 setLogs(logList)
 
@@ -56,7 +58,7 @@ export default function StaffDashboard() {
                         {children.slice(0, 5).map(child => (
                             <li key={child.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                                 <span>{child.first_name} {child.last_name}</span>
-                                <span className="text-xs bg-blue-200 px-2 py-1 rounded">{child.classroom}</span>
+                                <span className="text-xs bg-blue-200 px-2 py-1 rounded">{child.room}</span>
                             </li>
                         ))}
                     </ul>

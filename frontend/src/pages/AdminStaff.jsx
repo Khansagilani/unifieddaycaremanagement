@@ -17,14 +17,13 @@ export default function AdminStaff() {
 
     const loadStaff = async () => {
         try {
-            const res = await api.get('/api/users?role=STAFF')
+            const res = await api.get('/api/auth/users?role=STAFF')
             setStaff(res.data.data || [])
         } catch (err) {
             console.error('Failed to load staff', err)
             setStaff([])
         }
     }
-
     useEffect(() => {
         loadStaff()
     }, [])

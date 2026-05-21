@@ -150,7 +150,7 @@ class ChildPersonalityCreate(BaseModel):
 class ChildPersonalityResponse(ChildPersonalityCreate):
     id: UUID
     child_id: UUID
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

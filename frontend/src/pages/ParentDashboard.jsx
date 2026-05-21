@@ -14,11 +14,11 @@ export default function ParentDashboard() {
                 const childList = childRes.data.data || []
                 setChildren(childList)
 
-                const logsRes = await api.get('/api/health-daily/daily-logs')
+                const logsRes = await api.get(`/api/health/daily-logs/${childId}?start_date=...&end_date=...`)
                 const logList = (logsRes.data.data || []).slice(0, 5)
                 setRecentLogs(logList)
 
-                const convRes = await api.get('/api/media/conversations')
+                const convRes = awaitapi.get('/api/messages/conversations')
                 const convs = convRes.data.data || []
 
                 setStats({

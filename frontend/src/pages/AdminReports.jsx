@@ -17,14 +17,15 @@ export default function AdminReports() {
                 const [childRes, invoicesRes, staffRes] = await Promise.all([
                     api.get('/api/children'),
                     api.get('/api/billing/invoices'),
-                    api.get('/api/users?role=STAFF')
+                    api.get('/api/auth/users?role=STAFF')  // ✅ fixed
                 ])
+
 
                 const invoices = invoicesRes.data.data || []
                 const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_cents || 0), 0) / 100
 
                 setStats({
-                    totalChildren: childRes.data.data?.length || 0,
+                    totalChildren: childRes.data.total || childRes.data.data?.length || 0,
                     totalStaff: staffRes.data.data?.length || 0,
                     totalInvoices: invoices.length,
                     revenue: totalRevenue,

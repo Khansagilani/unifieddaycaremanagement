@@ -9,7 +9,9 @@ export default function ChildDetail() {
     const [uploading, setUploading] = useState(false)
 
     useEffect(() => {
-        api.get(`/api/children/${id}/profile`).then(r => setProfile(r.data.data)).catch(() => { })
+        api.get(`/api/children/${id}/profile`)
+            .then(r => setProfile(r.data.data))
+            .catch(() => { })
     }, [id])
 
     async function handleUpload(e) {
@@ -21,9 +23,10 @@ export default function ChildDetail() {
         fd.append('child_id', id)
         setUploading(true)
         try {
-            const res = await api.post('/api/media/upload-cloudinary', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+            await api.post('/api/media/upload-cloudinary', fd, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            })
             alert('Uploaded')
-            // refresh profile
             const r = await api.get(`/api/children/${id}/profile`)
             setProfile(r.data.data)
         } catch (err) {
@@ -37,21 +40,43 @@ export default function ChildDetail() {
     return (
         <div className="p-6">
             <h1 className="text-2xl">{profile.first_name} {profile.last_name}</h1>
+
             <div className="mt-4">
                 <h2 className="font-semibold">Authorized Pickups</h2>
-                <ul>{profile.authorized_pickups.map(p => <li key={p.id}>{p.name} - {p.relationship}</li>)}</ul>
+                {profile.authorized_pickups?.length === 0 ? (
+                    <p className="text-sm text-gray-500">No authorized pickups</p>
+                ) : (
+                    <ul>
+                        {profile.authorized_pickups?.map(p => (
+                            <li key={p.id}>{p.name} - {p.relationship}</li>
+                        ))}
+                    </ul>
+                )}
             </div>
+
+            {/* ✅ Fixed media section */}
             <div className="mt-4">
                 <h2 className="font-semibold">Media</h2>
                 <div className="grid grid-cols-3 gap-2">
-                    {profile.authorized_pickups && profile.authorized_pickups.length === 0 && <div className="text-sm text-gray-500">No media</div>}
+                    {!profile.media || profile.media.length === 0 ? (
+                        <div className="text-sm text-gray-500">No media</div>
+                    ) : (
+                        profile.media.map(m => (
+                            <img key={m.id} src={m.url} alt="media" className="rounded w-full object-cover" />
+                        ))
+                    )}
                 </div>
             </div>
 
             <form onSubmit={handleUpload} className="mt-6">
                 <label className="block mb-2">Upload photo / video</label>
                 <input type="file" onChange={e => setFile(e.target.files[0])} />
-                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" disabled={uploading}>{uploading ? 'Uploading...' : 'Upload'}</button>
+                <button
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded"
+                    disabled={uploading}
+                >
+                    {uploading ? 'Uploading...' : 'Upload'}
+                </button>
             </form>
         </div>
     )

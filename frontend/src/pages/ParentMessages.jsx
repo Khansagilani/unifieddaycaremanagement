@@ -12,7 +12,7 @@ export default function ParentMessages() {
     const [loading, setLoading] = useState(false)
 
     // WebSocket for real-time messages
-    const wsUrl = `ws://localhost:8000/api/ws/messages`
+    const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8001'}/api/ws/messages`
     const { data: wsData, status: wsStatus } = useWebSocket(wsUrl)
 
     useEffect(() => {
@@ -89,8 +89,8 @@ export default function ParentMessages() {
                                     key={conv.id}
                                     onClick={() => handleSelectConversation(conv.id)}
                                     className={`w-full text-left p-3 rounded transition ${selectedConversation === conv.id
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-white hover:bg-gray-100 border'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white hover:bg-gray-100 border'
                                         }`}
                                 >
                                     <div className="font-semibold text-sm">{conv.name || 'Conversation'}</div>
@@ -118,8 +118,8 @@ export default function ParentMessages() {
                                         >
                                             <div
                                                 className={`max-w-xs px-4 py-2 rounded-lg ${msg.sender_id === user?.id
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'bg-gray-200 text-gray-900'
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-gray-200 text-gray-900'
                                                     }`}
                                             >
                                                 <div className="text-sm">{msg.content}</div>

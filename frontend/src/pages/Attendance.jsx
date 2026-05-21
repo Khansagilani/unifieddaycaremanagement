@@ -7,7 +7,7 @@ export default function Attendance() {
     const [loading, setLoading] = useState(false)
 
     // WebSocket for real-time attendance updates
-    const wsUrl = `ws://localhost:8000/api/ws/attendance`
+    const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8001'}/api/ws/attendance`
     const { data: wsData, status: wsStatus } = useWebSocket(wsUrl)
 
     useEffect(() => {

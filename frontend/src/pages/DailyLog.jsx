@@ -37,61 +37,53 @@ export default function DailyLog() {
         }
 
         setLoading(true)
+        const today = new Date().toISOString().split('T')[0]
+
         try {
-            await api.post('/api/health-daily/daily-logs', {
+            // Step 1: Create the daily log
+            await api.post('/api/health/daily-logs', {
                 child_id: selectedChild,
-                date: new Date().toISOString().split('T')[0],
+                log_date: today,
                 notes: form.notes
             })
 
-            // Post naps entry
+            // Step 2: Post sub-entries with correct URLs
             if (form.naps) {
-                await api.post('/api/health-daily/daily-logs/naps', {
-                    daily_log_id: selectedChild,
-                    time: form.naps,
+                await api.post(`/api/health/daily-logs/${selectedChild}/${today}/naps`, {
+                    start_time: form.naps,
                     duration_minutes: 60
                 }).catch(() => { })
             }
 
-            // Post meals entry
             if (form.meals) {
-                await api.post('/api/health-daily/daily-logs/meals', {
-                    daily_log_id: selectedChild,
+                await api.post(`/api/health/daily-logs/${selectedChild}/${today}/meals`, {
                     meal_type: 'LUNCH',
                     amount_consumed: form.meals
                 }).catch(() => { })
             }
 
-            // Post activities entry
             if (form.activities) {
-                await api.post('/api/health-daily/daily-logs/activities', {
-                    daily_log_id: selectedChild,
-                    activity: form.activities,
+                await api.post(`/api/health/daily-logs/${selectedChild}/${today}/activities`, {
+                    activity_name: form.activities,
                     notes: 'Staff logged activity'
                 }).catch(() => { })
             }
 
-            // Post diapers entry
             if (form.diapers) {
-                await api.post('/api/health-daily/daily-logs/diapers', {
-                    daily_log_id: selectedChild,
+                await api.post(`/api/health/daily-logs/${selectedChild}/${today}/diapers`, {
                     diaper_type: form.diapers,
                     notes: 'Diaper change logged'
                 }).catch(() => { })
             }
 
-            // Post potty entry
             if (form.potty) {
-                await api.post('/api/health-daily/daily-logs/potty', {
-                    daily_log_id: selectedChild,
-                    type: form.potty
+                await api.post(`/api/health/daily-logs/${selectedChild}/${today}/potty`, {
+                    potty_type: form.potty
                 }).catch(() => { })
             }
 
-            // Post incident entry
             if (form.incidents) {
-                await api.post('/api/health-daily/incidents', {
-                    child_id: selectedChild,
+                await api.post(`/api/health/${selectedChild}/incidents`, {
                     description: form.incidents,
                     severity: 'LOW',
                     incident_type: 'OTHER'
@@ -118,12 +110,12 @@ export default function DailyLog() {
                     <label className="block text-sm font-semibold mb-2">Select Child</label>
                     <select
                         value={selectedChild || ''}
-                        onChange={(e) => setSelectedChild(parseInt(e.target.value))}
+                        onChange={(e) => setSelectedChild(e.target.value)}
                         className="w-full border rounded p-2"
                     >
                         {children.map(c => (
                             <option key={c.id} value={c.id}>
-                                {c.first_name} {c.last_name} ({c.classroom})
+                                {c.first_name} {c.last_name} ({c.room_name})
                             </option>
                         ))}
                     </select>
@@ -135,7 +127,6 @@ export default function DailyLog() {
                     </div>
                 )}
 
-                {/* 7 Sections */}
                 <fieldset className="border p-4 rounded">
                     <legend className="font-semibold">Naps</legend>
                     <input
@@ -143,7 +134,6 @@ export default function DailyLog() {
                         value={form.naps}
                         onChange={(e) => setForm({ ...form, naps: e.target.value })}
                         className="w-full border rounded p-2"
-                        placeholder="Nap time"
                     />
                 </fieldset>
 
