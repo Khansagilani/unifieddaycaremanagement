@@ -21,6 +21,7 @@ import ChildFeed from './pages/ChildFeed'
 import ParentMessages from './pages/ParentMessages'
 import LandingPage from './pages/LandingPage'
 import useAuth from './hooks/useAuth'
+import EditChildProfile from './pages/EditChildProfile'
 
 function PublicOrDashboard({ role, children }) {
     const { user } = useAuth()
@@ -62,6 +63,16 @@ export default function App() {
                 <Route path="/children/:id" element={<ProtectedRoute role={["STAFF", "PARENT", "ADMIN"]}><ChildDetail /></ProtectedRoute>} />
                 <Route path="/invoices" element={<ProtectedRoute role={["ADMIN", "PARENT"]}><AdminInvoices /></ProtectedRoute>} />
                 <Route path="/invoices/:id/pay" element={<ProtectedRoute role={["ADMIN", "PARENT"]}><InvoicePay /></ProtectedRoute>} />
+                <Route path="/children/:id/edit" element={
+                    <ProtectedRoute role={["ADMIN", "PARENT"]}>
+                        <EditChildProfile />
+                    </ProtectedRoute>
+                } />
+                <Route path="/children/:id/edit" element={
+                    <ProtectedRoute role={["ADMIN", "PARENT", "STAFF"]}>
+                        <EditChildProfile />
+                    </ProtectedRoute>
+                } />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

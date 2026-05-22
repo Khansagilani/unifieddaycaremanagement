@@ -111,7 +111,9 @@ def get_child_profile(
         allergies=[AllergyResponse.from_orm(a) for a in child.allergies],
         fears=[ChildFearResponse.from_orm(f) for f in child.fears],
         interests=[ChildInterestResponse.from_orm(i) for i in child.interests],
-        routines=[ChildRoutineResponse.from_orm(r) for r in child.routines],
+        # ✅ Fixed — routines is a single object (uselist=False in model)
+        routines=ChildRoutineResponse.from_orm(
+            child.routines) if child.routines else None,
         authorized_pickups=[AuthorizedPickupResponse.from_orm(
             p) for p in child.authorized_pickups],
         emergency_contacts=[EmergencyContactResponse.from_orm(

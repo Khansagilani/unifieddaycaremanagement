@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from '../api/axios'
+import { Link } from 'react-router-dom'  // add this at top
 
 const initialForm = {
     first_name: '',
@@ -51,10 +52,7 @@ export default function AdminChildren() {
         setLoading(false)
     }
 
-    api.post('/api/children/{child_id}/parents', {
-        user_id: parentUserId,
-        relationship: 'MOTHER'
-    })
+
     return (
         <div className="p-6 max-w-6xl mx-auto">
             <h1 className="text-3xl font-bold mb-6">Child Management</h1>
@@ -67,9 +65,18 @@ export default function AdminChildren() {
                     ) : (
                         <div className="space-y-3">
                             {children.map((child) => (
-                                <div key={child.id} className="p-4 border rounded-lg bg-gray-50">
-                                    <div className="font-semibold">{child.first_name} {child.last_name}</div>
-                                    <div className="text-sm text-gray-600">{child.room_name || 'No room assigned'} · {child.gender}</div>
+                                // ✅ Fixed — with link to child detail
+                                <div key={child.id} className="p-4 border rounded-lg bg-gray-50 flex justify-between items-center">
+                                    <div>
+                                        <div className="font-semibold">{child.first_name} {child.last_name}</div>
+                                        <div className="text-sm text-gray-600">{child.room_name || 'No room assigned'} · {child.gender}</div>
+                                    </div>
+                                    <Link
+                                        to={`/children/${child.id}`}
+                                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                                    >
+                                        View Details →
+                                    </Link>
                                 </div>
                             ))}
                         </div>
