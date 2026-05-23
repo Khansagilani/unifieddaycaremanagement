@@ -97,8 +97,9 @@ async def submit_link_request(
     db: Session = Depends(get_db)
 ):
     """Parent submits registration number to link to a child"""
-    if current_user.role != "PARENT":
-        raise HTTPException(status_code=403, detail="Only parents can submit link requests")
+    role_value = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+    if role_value != "PARENT":
+        raise HTTPException(status_code=403, detail=f"Only parents can submit link requests (your role: {role_value})")
 
     # Find child by registration number
     child = db.execute(
