@@ -42,6 +42,20 @@ with engine.connect() as conn:
     conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS home_language VARCHAR(100)"))
     conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS religion VARCHAR(100)"))
     conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS cultural_notes TEXT"))
+    # Profile table columns
+    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
+    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
+    conn.execute(text("ALTER TABLE child_development ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS breast_milk_notes TEXT"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS feeds_per_day INTEGER"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS meal_schedule TEXT"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS self_feeds BOOLEAN DEFAULT FALSE"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS needs_help_feeding BOOLEAN DEFAULT TRUE"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS utensils_preferred VARCHAR(255)"))
+    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS cup_type VARCHAR(100)"))
+    conn.execute(text("ALTER TABLE media_posts ADD COLUMN IF NOT EXISTS daily_log_id UUID REFERENCES daily_logs(id)"))
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS staff_attendance (
             id UUID PRIMARY KEY,
