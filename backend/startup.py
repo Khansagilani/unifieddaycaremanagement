@@ -61,6 +61,19 @@ with engine.connect() as conn:
     conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS id_number VARCHAR(100)"))
     conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS photo_url VARCHAR"))
     conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"))
+    conn.execute(text("ALTER TABLE emergency_contacts ADD COLUMN IF NOT EXISTS link_type VARCHAR(100)"))
+    conn.execute(text("ALTER TABLE emergency_contacts ADD COLUMN IF NOT EXISTS phone_secondary VARCHAR(50)"))
+    conn.execute(text("ALTER TABLE emergency_contacts ADD COLUMN IF NOT EXISTS contact_order INTEGER DEFAULT 1"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS usual_wake_time TIME"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS usual_sleep_time TIME"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS nap_duration_minutes INTEGER"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS nap_preferences TEXT"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS bedtime_rituals TEXT"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS morning_mood TEXT"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS uses_pacifier BOOLEAN DEFAULT FALSE"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS uses_comfort_blanket BOOLEAN DEFAULT FALSE"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS comfort_blanket_desc TEXT"))
+    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS special_routines TEXT"))
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS staff_attendance (
             id UUID PRIMARY KEY,
