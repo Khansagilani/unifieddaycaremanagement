@@ -34,4 +34,4 @@ class MediaService:
 
     @staticmethod
     def get_media_for_child(db: Session, child_id: int) -> List[MediaPost]:
-        return db.query(MediaPost).filter_by(child_id=child_id).order_by(MediaPost.created_at.desc()).all()
+        return db.query(MediaPost).filter_by(child_id=child_id).order_by(MediaPost.posted_at.desc()).all()
