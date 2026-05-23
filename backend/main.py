@@ -1,6 +1,7 @@
 from app.routers import ws
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.routers import auth
 from app.routers import children
@@ -44,6 +45,24 @@ app.include_router(media_messaging_billing.billing_router)
 app.include_router(ws.router)
 app.include_router(parent_router)
 app.include_router(staff_attendance_router)
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    headers = {}
+    allowed_pattern = r"https://.*\.vercel\.app"
+    import re
+    if re.match(allowed_pattern, origin) or origin in [
+        "http://localhost:5173", "http://localhost:3000", settings.FRONTEND_URL
+    ]:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers=headers,
+    )
+
 
 # Health check endpoint
 
