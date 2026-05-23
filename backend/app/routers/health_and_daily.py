@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from datetime import date, datetime
 from typing import Optional
+from uuid import UUID
 from app.database import get_db
 from app.core.dependencies import get_current_user, require_role
 from app.models.user import User
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/api/health", tags=["health"])
 
 @router.put("/{child_id}/profile", response_model=dict)
 def update_health_profile(
-    child_id: int,
+    child_id: UUID,
     health_data: HealthProfileCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -37,7 +38,7 @@ def update_health_profile(
 
 @router.get("/{child_id}/profile", response_model=dict)
 def get_health_profile(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -52,7 +53,7 @@ def get_health_profile(
 
 @router.post("/{child_id}/medications", response_model=dict)
 def add_medication(
-    child_id: int,
+    child_id: UUID,
     med_data: MedicationCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -66,7 +67,7 @@ def add_medication(
 
 @router.get("/{child_id}/medications", response_model=dict)
 def get_medications(
-    child_id: int,
+    child_id: UUID,
     active: Optional[bool] = Query(False),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -78,7 +79,7 @@ def get_medications(
 
 @router.post("/{child_id}/medications/logs", response_model=dict)
 def log_medication(
-    child_id: int,
+    child_id: UUID,
     med_log_data: MedicationLogCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -94,7 +95,7 @@ def log_medication(
 
 @router.post("/{child_id}/vaccinations", response_model=dict)
 def add_vaccination(
-    child_id: int,
+    child_id: UUID,
     vax_data: VaccinationCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -108,7 +109,7 @@ def add_vaccination(
 
 @router.get("/{child_id}/vaccinations", response_model=dict)
 def get_vaccinations(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -121,7 +122,7 @@ def get_vaccinations(
 
 @router.post("/{child_id}/incidents", response_model=dict)
 def create_incident(
-    child_id: int,
+    child_id: UUID,
     incident_data: IncidentReportCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
@@ -135,7 +136,7 @@ def create_incident(
 
 @router.get("/{child_id}/incidents", response_model=dict)
 def get_incidents(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -161,7 +162,7 @@ def create_daily_log(
 
 @router.put("/daily-logs/{child_id}/{log_date}", response_model=dict)
 def update_daily_log(
-    child_id: int,
+    child_id: UUID,
     log_date: date,
     log_data: DailyLogCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
@@ -176,7 +177,7 @@ def update_daily_log(
 
 @router.get("/daily-logs/{child_id}", response_model=dict)
 def get_daily_logs(
-    child_id: int,
+    child_id: UUID,
     start_date: date = Query(...),
     end_date: date = Query(...),
     current_user: User = Depends(get_current_user),
@@ -189,7 +190,7 @@ def get_daily_logs(
 
 @router.get("/daily-logs/{child_id}/{log_date}", response_model=dict)
 def get_daily_log(
-    child_id: int,
+    child_id: UUID,
     log_date: date,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -205,7 +206,7 @@ def get_daily_log(
 
 @router.post("/daily-logs/{child_id}/{log_date}/naps", response_model=dict)
 def add_nap_record(
-    child_id: int,
+    child_id: UUID,
     log_date: date,
     nap_data: NapRecordCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
@@ -222,7 +223,7 @@ def add_nap_record(
 
 @router.post("/daily-logs/{child_id}/{log_date}/activities", response_model=dict)
 def add_activity_log(
-    child_id: int,
+    child_id: UUID,
     log_date: date,
     activity_data: ActivityLogCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
@@ -239,7 +240,7 @@ def add_activity_log(
 
 @router.post("/daily-logs/{child_id}/{log_date}/meals", response_model=dict)
 def add_meal_log(
-    child_id: int,
+    child_id: UUID,
     log_date: date,
     meal_data: MealLogCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
@@ -256,7 +257,7 @@ def add_meal_log(
 
 @router.post("/daily-logs/{child_id}/{log_date}/diapers", response_model=dict)
 def add_diaper_log(
-    child_id: int,
+    child_id: UUID,
     log_date: date,
     diaper_data: DiaperLogCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
@@ -273,7 +274,7 @@ def add_diaper_log(
 
 @router.post("/daily-logs/{child_id}/{log_date}/potty", response_model=dict)
 def add_potty_log(
-    child_id: int,
+    child_id: UUID,
     log_date: date,
     potty_data: PottyLogCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
@@ -316,7 +317,7 @@ def check_out(
 
 @router.get("/attendance/{child_id}", response_model=dict)
 def get_attendance(
-    child_id: int,
+    child_id: UUID,
     start_date: date = Query(...),
     end_date: date = Query(...),
     current_user: User = Depends(get_current_user),
@@ -329,7 +330,7 @@ def get_attendance(
 
 @router.get("/attendance/{child_id}/today", response_model=dict)
 def get_today_attendance(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

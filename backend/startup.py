@@ -3,11 +3,42 @@ from app.database import Base, engine, SessionLocal
 from app.models.base import Center
 from app.models.user import User, UserRole
 from app.core.security import hash_password
+from sqlalchemy import text
 import uuid
 
-# Create all tables
+# Create all ORM-mapped tables
 Base.metadata.create_all(bind=engine)
 print("Tables created!")
+
+# Create tables not represented by ORM models
+with engine.connect() as conn:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            id UUID PRIMARY KEY,
+            user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            message TEXT,
+            type VARCHAR(100),
+            related_id UUID,
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+    """))
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS parent_link_requests (
+            id UUID PRIMARY KEY,
+            parent_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+            child_id UUID REFERENCES children(id) ON DELETE CASCADE NOT NULL,
+            registration_number VARCHAR(100),
+            status VARCHAR(50) DEFAULT 'PENDING',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        )
+    """))
+    conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_month VARCHAR(20)"))
+    conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_year INTEGER"))
+    conn.commit()
+print("Extra tables ensured!")
 
 # Create admin only if doesn't exist
 db = SessionLocal()

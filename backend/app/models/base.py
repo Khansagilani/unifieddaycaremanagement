@@ -56,6 +56,7 @@ class Child(Base):
     gender = Column(SQLEnum(Gender))
     photo_url = Column(String)
     room_name = Column(String(100))
+    registration_number = Column(String(100))
     status = Column(SQLEnum(ChildStatus), default=ChildStatus.ACTIVE)
     enrollment_date = Column(DATE, nullable=False)
     exit_date = Column(DATE)
@@ -106,6 +107,7 @@ class ParentChild(Base):
     receives_invoices = Column(Boolean, default=False)
     is_emergency_contact = Column(Boolean, default=False)
     contact_priority = Column(Integer, default=1)
+    status = Column(String(50), default="PENDING")
 
     class Config:
         from_attributes = True

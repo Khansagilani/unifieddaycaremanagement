@@ -18,22 +18,40 @@ api.interceptors.request.use((config) => {
     return config
 })
 
-// Response interceptor to handle 401 and try refresh
+// Response interceptor — handles 401 by attempting token refresh once, then forces re-login
 api.interceptors.response.use(
     (r) => r,
     async (error) => {
-        try {
-            const status = error.response ? error.response.status : null
-            if (status === 401) {
-                // attempt refresh
-                const refreshRes = await api.post('/api/auth/refresh')
-                if (refreshRes && refreshRes.data && refreshRes.data.access_token) {
-                    localStorage.setItem('access_token', refreshRes.data.access_token)
-                    error.config.headers.Authorization = `Bearer ${refreshRes.data.access_token}`
-                    return api.request(error.config)
+        const status = error.response?.status
+        const isRefreshCall = error.config?.url?.includes('/api/auth/refresh')
+
+        if (status === 401 && !isRefreshCall && !error.config?._retry) {
+            error.config._retry = true
+            const refreshToken = localStorage.getItem('refresh_token')
+            if (refreshToken) {
+                try {
+                    const refreshRes = await api.post('/api/auth/refresh', { refresh_token: refreshToken })
+                    const refreshData = refreshRes?.data?.data
+                    if (refreshData?.access_token) {
+                        localStorage.setItem('access_token', refreshData.access_token)
+                        if (refreshData.refresh_token) {
+                            localStorage.setItem('refresh_token', refreshData.refresh_token)
+                        }
+                        error.config.headers = error.config.headers || {}
+                        error.config.headers.Authorization = `Bearer ${refreshData.access_token}`
+                        return api.request(error.config)
+                    }
+                } catch {
+                    // Refresh failed — fall through to force logout
                 }
             }
-        } catch (e) { }
+            // No valid refresh token — clear auth state and redirect to login
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('refresh_token')
+            localStorage.removeItem('user')
+            window.location.href = '/login'
+        }
+
         return Promise.reject(error)
     }
 )

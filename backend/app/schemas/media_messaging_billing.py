@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from enum import Enum
 from uuid import UUID
@@ -12,18 +12,21 @@ class MediaTypeEnum(str, Enum):
 
 
 class MediaUploadRequest(BaseModel):
-    child_id: Optional[int] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    media_type: MediaTypeEnum
-    url: HttpUrl
-    public_id: Optional[str] = None
+    child_id: Optional[UUID] = None
+    caption: Optional[str] = None
+    media_type: Optional[str] = "PHOTO"
+    url: str
 
 
-class MediaResponse(MediaUploadRequest):
-    id: int
-    staff_id: int
-    created_at: datetime
+class MediaResponse(BaseModel):
+    id: UUID
+    child_id: UUID
+    staff_id: UUID
+    media_type: str
+    url: str
+    caption: Optional[str] = None
+    visible_to_parents: bool = True
+    posted_at: datetime
 
     class Config:
         from_attributes = True
@@ -37,24 +40,29 @@ class ConversationCreate(BaseModel):
 
 
 class ConversationResponse(BaseModel):
-    id: int
-    name: Optional[str]
+    id: UUID
+    title: Optional[str] = None
+    type: Optional[str] = None
     created_at: datetime
+    last_message_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
 
 
 class MessageCreate(BaseModel):
-    conversation_id: int
-    content: str = Field(..., min_length=1)
-    attachments: Optional[List[str]] = []
+    conversation_id: UUID
+    body: str = Field(..., min_length=1)
+    attachment_url: Optional[str] = None
 
 
-class MessageResponse(MessageCreate):
-    id: int
-    sender_id: int
-    created_at: datetime
+class MessageResponse(BaseModel):
+    id: UUID
+    conversation_id: UUID
+    sender_id: UUID
+    body: str
+    attachment_url: Optional[str] = None
+    sent_at: datetime
 
     class Config:
         from_attributes = True
@@ -80,15 +88,37 @@ class FeePlanResponse(FeePlanCreate):
 
 
 class InvoiceCreate(BaseModel):
-    child_id: int
-    fee_plan_id: int
+    child_id: Optional[UUID] = None
+    fee_plan_id: Optional[UUID] = None
     due_date: datetime
+    billing_month: Optional[str] = None
+    billing_year: Optional[int] = None
+    amount_due: Optional[Decimal] = None
+    notes: Optional[str] = None
 
 
-class InvoiceResponse(InvoiceCreate):
-    id: int
+class GenerateMonthlyRequest(BaseModel):
+    year: int
+    month: int
+    fee_plan_id: Optional[UUID] = None
+
+
+class InvoiceResponse(BaseModel):
+    id: UUID
     invoice_number: str
-    created_at: datetime
+    child_id: Optional[UUID] = None
+    child_name: Optional[str] = None
+    center_id: Optional[UUID] = None
+    fee_plan_id: Optional[UUID] = None
+    billing_month: Optional[str] = None
+    billing_year: Optional[int] = None
+    amount_due: Optional[Decimal] = None
+    amount_paid: Optional[Decimal] = None
+    status: Optional[str] = None
+    due_date: Optional[date] = None
+    notes: Optional[str] = None
+    issued_at: Optional[datetime] = None
+    paid_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

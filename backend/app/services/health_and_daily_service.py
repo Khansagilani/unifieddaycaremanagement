@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from datetime import date, datetime, time, timedelta
 from typing import Optional, List, Tuple
-from app.models.base import Child, Room
+from uuid import UUID
+from app.models.base import Child
 from app.models.daily_log import Attendance
 from app.models.child import (
     HealthProfile, Medication, MedicationLog, Vaccination, IncidentReport
@@ -24,8 +25,8 @@ class HealthService:
     @staticmethod
     def get_or_create_health_profile(db: Session, child_id: int, center_id: int) -> Optional[HealthProfile]:
         """Get or create health profile"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -64,8 +65,8 @@ class HealthService:
     @staticmethod
     def add_medication(db: Session, child_id: int, center_id: int, med_data: MedicationCreate) -> Optional[Medication]:
         """Add medication"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -89,8 +90,8 @@ class HealthService:
     @staticmethod
     def get_medications(db: Session, child_id: int, center_id: int, active_only: bool = False) -> List[Medication]:
         """Get medications for child"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return []
@@ -104,8 +105,8 @@ class HealthService:
     @staticmethod
     def log_medication(db: Session, child_id: int, center_id: int, log_data: MedicationLogCreate) -> Optional[MedicationLog]:
         """Log medication administration"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -126,8 +127,8 @@ class HealthService:
     @staticmethod
     def add_vaccination(db: Session, child_id: int, center_id: int, vax_data: VaccinationCreate) -> Optional[Vaccination]:
         """Add vaccination"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -149,8 +150,8 @@ class HealthService:
     @staticmethod
     def get_vaccinations(db: Session, child_id: int, center_id: int) -> List[Vaccination]:
         """Get vaccinations for child"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return []
@@ -161,8 +162,8 @@ class HealthService:
     @staticmethod
     def create_incident_report(db: Session, child_id: int, center_id: int, incident_data: IncidentReportCreate) -> Optional[IncidentReport]:
         """Create incident report"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -190,8 +191,8 @@ class HealthService:
     @staticmethod
     def get_incident_reports(db: Session, child_id: int, center_id: int) -> List[IncidentReport]:
         """Get incident reports for child"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return []
@@ -204,8 +205,8 @@ class DailyLogService:
     @staticmethod
     def get_or_create_daily_log(db: Session, child_id: int, center_id: int, staff_id: int, log_date: date) -> Optional[DailyLog]:
         """Get or create daily log for child on date"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -349,8 +350,8 @@ class DailyLogService:
     @staticmethod
     def get_daily_logs(db: Session, child_id: int, center_id: int, start_date: date, end_date: date) -> List[DailyLog]:
         """Get daily logs for date range"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return []
@@ -366,8 +367,8 @@ class DailyLogService:
     @staticmethod
     def get_daily_log(db: Session, child_id: int, center_id: int, log_date: date) -> Optional[DailyLog]:
         """Get daily log for specific date"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -380,8 +381,8 @@ class AttendanceService:
     @staticmethod
     def check_in(db: Session, child_id: int, center_id: int, check_in_data: CheckInRequest, staff_id: int) -> Optional[Attendance]:
         """Check in child"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -412,8 +413,8 @@ class AttendanceService:
     @staticmethod
     def check_out(db: Session, child_id: int, center_id: int, check_out_data: CheckOutRequest) -> Optional[Attendance]:
         """Check out child"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None
@@ -438,8 +439,8 @@ class AttendanceService:
     @staticmethod
     def get_attendance(db: Session, child_id: int, center_id: int, start_date: date, end_date: date) -> List[Attendance]:
         """Get attendance for date range"""
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return []
@@ -456,8 +457,8 @@ class AttendanceService:
     def get_today_attendance(db: Session, child_id: int, center_id: int) -> Optional[Attendance]:
         """Get today's attendance"""
         today = date.today()
-        child = db.query(Child).join(Room).filter(
-            and_(Child.id == child_id, Room.center_id == center_id)
+        child = db.query(Child).filter(
+            and_(Child.id == child_id, Child.center_id == center_id)
         ).first()
         if not child:
             return None

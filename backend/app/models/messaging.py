@@ -159,6 +159,8 @@ class Invoice(Base):
         "centers.id"), nullable=False)
     fee_plan_id = Column(UUID(as_uuid=True), ForeignKey("fee_plans.id"))
     invoice_number = Column(String(100), nullable=False, unique=True)
+    billing_month = Column(String(20))
+    billing_year = Column(Integer)
     amount_due = Column(NUMERIC(10, 2), nullable=False)
     amount_paid = Column(NUMERIC(10, 2), default=0)
     due_date = Column(DATE, nullable=False)

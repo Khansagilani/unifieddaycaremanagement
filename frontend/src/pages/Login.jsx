@@ -57,6 +57,7 @@ export default function Login() {
         try {
             const res = await login(email, password)
             const token = res.data.data.access_token
+            const refreshToken = res.data.data.refresh_token
             const user = res.data.data.user
 
             if (!token || !user) {
@@ -69,6 +70,7 @@ export default function Login() {
                 return
             }
 
+            localStorage.setItem('refresh_token', refreshToken)
             useAuth.getState().loginLocal(token, user)
 
             if (user.role === 'ADMIN') navigate('/admin')

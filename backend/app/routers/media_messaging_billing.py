@@ -1,16 +1,21 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Request
 from sqlalchemy.orm import Session
+from sqlalchemy import nullslast
 from typing import List, Optional
+from uuid import UUID
+from datetime import datetime, timezone
 from app.database import get_db
 from app.core.dependencies import get_current_user, require_role
 from app.models.user import User
+from app.models.base import Child
 from app.services.media_service import MediaService
 from app.services.messaging_service import MessagingService
 from app.services.billing_service import BillingService
-from app.models.messaging import Invoice, FeePlan
+from app.models.messaging import Invoice, FeePlan, Payment, ConversationMember, Conversation
 from app.schemas.media_messaging_billing import (
     MediaUploadRequest, MediaResponse, ConversationCreate, ConversationResponse,
-    MessageCreate, MessageResponse, FeePlanCreate, FeePlanResponse, InvoiceCreate, InvoiceResponse
+    MessageCreate, MessageResponse, FeePlanCreate, FeePlanResponse, InvoiceCreate, InvoiceResponse,
+    GenerateMonthlyRequest
 )
 from app.utils.response import success_response, error_response
 from app.core.config import settings
@@ -43,7 +48,8 @@ def upload_media(
 def upload_cloudinary(
     file: UploadFile = File(...),
     filename: Optional[str] = Form(None),
-    child_id: Optional[int] = Form(None),
+    child_id: Optional[str] = Form(None),
+    caption: Optional[str] = Form(None),
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
@@ -51,14 +57,14 @@ def upload_cloudinary(
     if not settings.CLOUDINARY_API_KEY:
         return error_response("CLOUDINARY_NOT_CONFIGURED", "Cloudinary is not configured on the server")
     try:
-        file_content = file.file
-        public_id = filename or None
-        res = cloudinary.uploader.upload(file_content, public_id=public_id)
+        res = cloudinary.uploader.upload(file.file, public_id=filename or None)
+        child_uuid = UUID(child_id) if child_id else None
+        media_type = "VIDEO" if file.content_type and file.content_type.startswith("video") else "PHOTO"
         media_req = MediaUploadRequest(
-            child_id=int(child_id) if child_id else None,
-            media_type=None,
+            child_id=child_uuid,
+            media_type=media_type,
             url=res.get('secure_url'),
-            public_id=res.get('public_id')
+            caption=caption,
         )
         media = MediaService.add_media(db, current_user.id, media_req)
         return success_response(MediaResponse.from_orm(media), "Uploaded to Cloudinary")
@@ -68,7 +74,7 @@ def upload_cloudinary(
 
 @router.get("/children/{child_id}", response_model=dict)
 def media_for_child(
-    child_id: int,
+    child_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -87,7 +93,7 @@ def create_conversation(
     db: Session = Depends(get_db)
 ):
     convo = MessagingService.create_conversation(
-        db, current_user.id, payload.member_ids, payload.name)
+        db, current_user.id, current_user.center_id, payload.member_ids, payload.name)
     return success_response(ConversationResponse.from_orm(convo), "Conversation created")
 
 
@@ -98,13 +104,13 @@ def send_message(
     db: Session = Depends(get_db)
 ):
     msg = MessagingService.send_message(
-        db, current_user.id, payload.conversation_id, payload.content, payload.attachments)
+        db, current_user.id, payload.conversation_id, payload.body, payload.attachment_url)
     return success_response(MessageResponse.from_orm(msg), "Message sent")
 
 
 @msg_router.get("/conversations/{conversation_id}", response_model=dict)
 def get_messages(
-    conversation_id: int,
+    conversation_id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -114,6 +120,31 @@ def get_messages(
 
 # Billing router
 billing_router = APIRouter(prefix="/api/billing", tags=["billing"])
+
+
+def _invoice_response(inv: Invoice, db: Session) -> dict:
+    """Build an InvoiceResponse dict enriched with child_name."""
+    d = InvoiceResponse.from_orm(inv).model_dump()
+    if inv.child_id:
+        child = db.query(Child).filter_by(id=inv.child_id).first()
+        if child:
+            d['child_name'] = f"{child.first_name} {child.last_name}"
+    return d
+
+
+def _invoice_responses(invoices: list, db: Session) -> list:
+    """Build InvoiceResponse dicts enriched with child_names (batched lookup)."""
+    child_ids = list({i.child_id for i in invoices if i.child_id})
+    child_map = {}
+    if child_ids:
+        children = db.query(Child).filter(Child.id.in_(child_ids)).all()
+        child_map = {c.id: f"{c.first_name} {c.last_name}" for c in children}
+    result = []
+    for inv in invoices:
+        d = InvoiceResponse.from_orm(inv).model_dump()
+        d['child_name'] = child_map.get(inv.child_id)
+        result.append(d)
+    return result
 
 
 @billing_router.post("/fee-plans", response_model=dict)
@@ -151,27 +182,114 @@ def create_invoice(
     db: Session = Depends(get_db)
 ):
     inv = BillingService.create_invoice(
-        db, payload.child_id, payload.fee_plan_id, payload.due_date)
-    return success_response(InvoiceResponse.from_orm(inv), "Invoice created")
+        db,
+        child_id=payload.child_id,
+        fee_plan_id=payload.fee_plan_id,
+        due_date=payload.due_date,
+        center_id=current_user.center_id,
+        billing_month=payload.billing_month,
+        billing_year=payload.billing_year,
+        amount_due=payload.amount_due,
+        notes=payload.notes,
+    )
+    return success_response(_invoice_response(inv, db), "Invoice created")
+
+
+@billing_router.post("/invoices/generate-monthly", response_model=dict)
+def generate_monthly_invoices(
+    payload: GenerateMonthlyRequest,
+    current_user: User = Depends(require_role(["ADMIN"])),
+    db: Session = Depends(get_db)
+):
+    """Generate DRAFT invoices for all active children with fee plans for a given month."""
+    if not 1 <= payload.month <= 12:
+        raise HTTPException(status_code=400, detail="Month must be 1-12")
+    created = BillingService.generate_monthly_invoices(
+        db, current_user.center_id, payload.year, payload.month, payload.fee_plan_id)
+    return success_response(
+        _invoice_responses(created, db),
+        f"Generated {len(created)} draft invoice(s)"
+    )
+
+
+@billing_router.post("/invoices/{invoice_id}/send", response_model=dict)
+def send_invoice(
+    invoice_id: UUID,
+    current_user: User = Depends(require_role(["ADMIN"])),
+    db: Session = Depends(get_db)
+):
+    """Admin approves and sends a DRAFT invoice to the parent (status → SENT)."""
+    inv = BillingService.send_invoice(db, invoice_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return success_response(_invoice_response(inv, db), "Invoice sent to parent")
 
 
 @billing_router.get("/invoices", response_model=dict)
 def list_invoices(
-    child_id: Optional[int] = None,
+    child_id: Optional[UUID] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """List invoices optionally filtered by child_id. Admins see center invoices; parents see their child's invoices."""
+    """List invoices. Admins see center invoices; parents see their children's invoices."""
     query = db.query(Invoice)
-    if child_id:
-        query = query.filter_by(child_id=child_id)
-    else:
-        # if parent, limit to their children
-        if current_user.role == 'PARENT':
-            from app.models.base import ParentChild
-            links = db.query(ParentChild).filter_by(
-                user_id=current_user.id).all()
-            child_ids = [l.child_id for l in links]
-            query = query.filter(Invoice.child_id.in_(child_ids))
+    if current_user.role == 'ADMIN':
+        query = query.filter_by(center_id=current_user.center_id)
+        if child_id:
+            query = query.filter(Invoice.child_id == child_id)
+    elif current_user.role == 'PARENT':
+        from app.models.base import ParentChild
+        links = db.query(ParentChild).filter_by(user_id=current_user.id).all()
+        child_ids = [l.child_id for l in links]
+        query = query.filter(
+            Invoice.child_id.in_(child_ids),
+            Invoice.status.in_(["SENT", "PAID", "OVERDUE"])
+        )
     invoices = query.order_by(Invoice.issued_at.desc()).all()
-    return success_response([InvoiceResponse.from_orm(i) for i in invoices])
+    return success_response(_invoice_responses(invoices, db))
+
+
+@billing_router.post("/invoices/{invoice_id}/mark-cash-paid", response_model=dict)
+def mark_cash_paid(
+    invoice_id: UUID,
+    current_user: User = Depends(require_role(["ADMIN"])),
+    db: Session = Depends(get_db)
+):
+    """Admin marks an invoice as paid via cash"""
+    inv = db.query(Invoice).filter_by(id=invoice_id).first()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    if inv.status == "PAID":
+        raise HTTPException(status_code=400, detail="Invoice already paid")
+
+    now = datetime.now(timezone.utc)
+    inv.status = "PAID"
+    inv.amount_paid = inv.amount_due
+    inv.paid_at = now
+
+    payment = Payment(
+        invoice_id=inv.id,
+        amount=inv.amount_due,
+        payment_method="CASH",
+        transaction_ref=f"CASH-{inv.invoice_number}",
+        status="COMPLETED",
+        paid_at=now
+    )
+    db.add(payment)
+    db.commit()
+    db.refresh(inv)
+    return success_response(_invoice_response(inv, db), "Invoice marked as paid (cash)")
+
+
+@msg_router.get("/conversations", response_model=dict)
+def list_conversations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List conversations the current user is a member of"""
+    members = db.query(ConversationMember).filter_by(user_id=current_user.id).all()
+    conv_ids = [m.conversation_id for m in members]
+    convs = db.query(Conversation).filter(Conversation.id.in_(conv_ids)).order_by(
+        nullslast(Conversation.last_message_at.desc())
+    ).all()
+    return success_response([ConversationResponse.from_orm(c) for c in convs])

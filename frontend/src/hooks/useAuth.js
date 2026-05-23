@@ -5,12 +5,14 @@ export const useAuth = create((set) => ({
     setUser: (u) => set({ user: u }),
     logout: () => {
         localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
         localStorage.removeItem('user')
         set({ user: null })
     },
-    loginLocal: (token, user) => {
+    loginLocal: (token, user, refreshToken) => {
         localStorage.setItem('access_token', token)
         localStorage.setItem('user', JSON.stringify(user))
+        if (refreshToken) localStorage.setItem('refresh_token', refreshToken)
         set({ user })
     }
 }))

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
-from datetime import datetime, date
+from datetime import datetime, date, time
 from enum import Enum
 from uuid import UUID
 
@@ -151,8 +151,8 @@ class ChildRoutineCreate(BaseModel):
 class ChildRoutineResponse(BaseModel):
     id: UUID
     child_id: UUID
-    usual_wake_time: Optional[str] = None
-    usual_sleep_time: Optional[str] = None
+    usual_wake_time: Optional[time] = None
+    usual_sleep_time: Optional[time] = None
     nap_duration_minutes: Optional[int] = None
     nap_preferences: Optional[str] = None
     bedtime_rituals: Optional[str] = None
@@ -290,6 +290,7 @@ class ChildProfileResponse(BaseModel):
     date_of_birth: date
     gender: GenderEnum
     room_name: Optional[str] = None
+    registration_number: Optional[str] = None
     status: Optional[str] = None
     photo_url: Optional[str] = None
     enrollment_date: date
@@ -321,6 +322,8 @@ class ChildCreate(BaseModel):
     gender: GenderEnum
     room_name: Optional[str] = Field(None, max_length=100)
     enrollment_date: Optional[date] = None
+    registration_number: Optional[str] = None
+    photo_url: Optional[str] = None
 
 
 class ChildUpdate(BaseModel):
@@ -337,6 +340,7 @@ class ChildListResponse(BaseModel):
     date_of_birth: date
     gender: GenderEnum
     room_name: Optional[str] = None
+    registration_number: Optional[str] = None
     status: Optional[str] = None
     photo_url: Optional[str] = None
     enrollment_date: date
@@ -353,6 +357,7 @@ class ChildResponse(BaseModel):
     date_of_birth: date
     gender: GenderEnum
     room_name: Optional[str] = None
+    registration_number: Optional[str] = None
     status: Optional[str] = None
     photo_url: Optional[str] = None
     enrollment_date: date

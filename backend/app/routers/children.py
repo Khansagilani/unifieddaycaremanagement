@@ -348,19 +348,20 @@ def get_interests(
 
 
 @router.post("/{child_id}/routines", response_model=dict)
+@router.put("/{child_id}/routines", response_model=dict)
 def add_routine(
     child_id: UUID,
     routine_data: ChildRoutineCreate,
     current_user: User = Depends(require_role(["ADMIN", "STAFF"])),
     db: Session = Depends(get_db)
 ):
-    """Add child routine"""
+    """Add or update child routine"""
     routine = ChildService.add_routine(
         db, child_id, current_user.center_id, routine_data)
     if not routine:
         return error_response("CHILD_NOT_FOUND", "Child not found")
 
-    return success_response(ChildRoutineResponse.from_orm(routine), "Routine added")
+    return success_response(ChildRoutineResponse.from_orm(routine), "Routine saved")
 
 
 @router.get("/{child_id}/routines", response_model=dict)

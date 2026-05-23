@@ -22,6 +22,9 @@ import ParentMessages from './pages/ParentMessages'
 import LandingPage from './pages/LandingPage'
 import useAuth from './hooks/useAuth'
 import EditChildProfile from './pages/EditChildProfile'
+import ParentRegister from './pages/ParentRegister'
+import AdminLinkRequests from './pages/AdminLinkRequests'
+import NotificationsPage from './pages/NotificationsPage'
 
 function PublicOrDashboard({ role, children }) {
     const { user } = useAuth()
@@ -55,27 +58,23 @@ export default function App() {
                 <Route path="/admin/fee-plans" element={<ProtectedRoute role="ADMIN"><AdminFeePlans /></ProtectedRoute>} />
                 <Route path="/admin/staff" element={<ProtectedRoute role="ADMIN"><AdminStaff /></ProtectedRoute>} />
                 <Route path="/admin/reports" element={<ProtectedRoute role="ADMIN"><AdminReports /></ProtectedRoute>} />
-                // Add this with other admin routes
                 <Route path="/admin/invoices" element={<ProtectedRoute role="ADMIN"><AdminInvoices /></ProtectedRoute>} />
+                <Route path="/admin/link-requests" element={<ProtectedRoute role="ADMIN"><AdminLinkRequests /></ProtectedRoute>} />
 
                 {/* Shared Routes */}
                 <Route path="/children" element={<ProtectedRoute role={["STAFF", "PARENT", "ADMIN"]}><ChildrenList /></ProtectedRoute>} />
                 <Route path="/children/:id" element={<ProtectedRoute role={["STAFF", "PARENT", "ADMIN"]}><ChildDetail /></ProtectedRoute>} />
+                <Route path="/children/:id/edit" element={<ProtectedRoute role={["ADMIN", "PARENT", "STAFF"]}><EditChildProfile /></ProtectedRoute>} />
                 <Route path="/invoices" element={<ProtectedRoute role={["ADMIN", "PARENT"]}><AdminInvoices /></ProtectedRoute>} />
                 <Route path="/invoices/:id/pay" element={<ProtectedRoute role={["ADMIN", "PARENT"]}><InvoicePay /></ProtectedRoute>} />
-                <Route path="/children/:id/edit" element={
-                    <ProtectedRoute role={["ADMIN", "PARENT"]}>
-                        <EditChildProfile />
-                    </ProtectedRoute>
-                } />
-                <Route path="/children/:id/edit" element={
-                    <ProtectedRoute role={["ADMIN", "PARENT", "STAFF"]}>
-                        <EditChildProfile />
-                    </ProtectedRoute>
-                } />
+                <Route path="/register" element={<ParentRegister />} />
+                <Route path="/notifications" element={<ProtectedRoute role={["ADMIN", "PARENT", "STAFF"]}><NotificationsPage /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </ErrorBoundary>
     )
 }
+
+
+

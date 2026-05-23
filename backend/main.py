@@ -7,6 +7,8 @@ from app.routers import children
 from app.routers import health_and_daily
 from app.routers import media_messaging_billing
 import startup
+from app.routers.parent_routes import router as parent_router
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -39,6 +41,7 @@ app.include_router(media_messaging_billing.router)
 app.include_router(media_messaging_billing.msg_router)
 app.include_router(media_messaging_billing.billing_router)
 app.include_router(ws.router)
+app.include_router(parent_router)
 
 # Health check endpoint
 

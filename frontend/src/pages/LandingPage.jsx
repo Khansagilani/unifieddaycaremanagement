@@ -158,6 +158,17 @@ export default function LandingPage({ role = 'parent' }) {
                         >
                             {content.primary}
                         </Link>
+
+                        {/* ADD THIS */}
+                        {role === 'parent' && (
+                            <Link
+                                to="/register"
+                                className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5"
+                            >
+                                Parent Registration
+                            </Link>
+                        )}
+
                         <Link
                             to={content.secondaryTo}
                             className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-black text-slate-800 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5"

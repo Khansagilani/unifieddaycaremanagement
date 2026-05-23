@@ -19,6 +19,16 @@ from app.schemas.children import (
 )
 
 
+def _apply_schema(orm_obj, schema_obj):
+    """Set ORM object fields from Pydantic schema, skipping fields that don't exist on the model."""
+    data = schema_obj.model_dump(exclude_unset=True) if hasattr(schema_obj, 'model_dump') else schema_obj.dict(exclude_unset=True)
+    for field, value in data.items():
+        if hasattr(orm_obj, field):
+            if value == "":
+                value = None
+            setattr(orm_obj, field, value)
+
+
 class ChildService:
 
     @staticmethod
@@ -60,7 +70,9 @@ class ChildService:
             gender=child_data.gender,
             room_name=child_data.room_name,
             status="ACTIVE",
-            enrollment_date=child_data.enrollment_date or date.today()
+            enrollment_date=child_data.enrollment_date or date.today(),
+            registration_number=child_data.registration_number,
+            photo_url=child_data.photo_url,
         )
         db.add(child)
         db.flush()
@@ -115,11 +127,12 @@ class ChildService:
 
         pickup = AuthorizedPickup(
             child_id=child_id,
-            name=pickup_data.name,
-            relationship=pickup_data.relationship,
+            full_name=pickup_data.full_name,
             phone=pickup_data.phone,
-            email=pickup_data.email,
-            notes=pickup_data.notes
+            link_type=pickup_data.link_type,
+            id_type=pickup_data.id_type,
+            id_number=pickup_data.id_number,
+            is_active=pickup_data.is_active if pickup_data.is_active is not None else True,
         )
         db.add(pickup)
         db.commit()
@@ -159,18 +172,13 @@ class ChildService:
         if not child:
             return None
 
-        # If this is primary, remove primary from others
-        if contact_data.is_primary:
-            db.query(EmergencyContact).filter_by(child_id=child_id,
-                                                 is_primary=True).update({"is_primary": False})
-
         contact = EmergencyContact(
             child_id=child_id,
-            name=contact_data.name,
-            relationship=contact_data.relationship,
-            phone=contact_data.phone,
-            email=contact_data.email,
-            is_primary=contact_data.is_primary
+            full_name=contact_data.full_name,
+            link_type=contact_data.link_type,
+            phone_primary=contact_data.phone_primary,
+            phone_secondary=contact_data.phone_secondary,
+            contact_order=contact_data.contact_order if contact_data.contact_order is not None else 1,
         )
         db.add(contact)
         db.commit()
@@ -184,7 +192,7 @@ class ChildService:
         if not child:
             return []
 
-        return db.query(EmergencyContact).filter_by(child_id=child_id).order_by(EmergencyContact.is_primary.desc()).all()
+        return db.query(EmergencyContact).filter_by(child_id=child_id).order_by(EmergencyContact.contact_order.asc()).all()
 
     # Allergies
     @staticmethod
@@ -197,10 +205,9 @@ class ChildService:
         allergy = Allergy(
             child_id=child_id,
             allergen=allergy_data.allergen,
-            severity=allergy_data.severity,
-            symptoms=allergy_data.symptoms,
-            reaction_history=allergy_data.reaction_history,
-            treatment=allergy_data.treatment
+            severity=allergy_data.severity or "MILD",
+            reaction_symptoms=allergy_data.reaction,
+            action_required=allergy_data.notes or "Notify staff and parents immediately",
         )
         db.add(allergy)
         db.commit()
@@ -242,11 +249,11 @@ class ChildService:
 
         fear = ChildFear(
             child_id=child_id,
-            category=fear_data.category,
-            description=fear_data.description,
-            trigger=fear_data.trigger,
+            fear_description=fear_data.fear_description,
+            severity=fear_data.severity or "MILD",
+            triggers=fear_data.triggers,
             coping_strategy=fear_data.coping_strategy,
-            comfort_object=fear_data.comfort_object
+            staff_notes=fear_data.staff_notes,
         )
         db.add(fear)
         db.commit()
@@ -288,9 +295,10 @@ class ChildService:
 
         interest = ChildInterest(
             child_id=child_id,
-            interest=interest_data.interest,
-            activity_type=interest_data.activity_type,
-            skill_level=interest_data.skill_level
+            interest_category=interest_data.interest_category or "OTHER",
+            specific_interest=interest_data.specific_interest,
+            enthusiasm_level=interest_data.enthusiasm_level or "LIKES",
+            notes=interest_data.notes,
         )
         db.add(interest)
         db.commit()
@@ -314,14 +322,11 @@ class ChildService:
         if not child:
             return None
 
-        routine = ChildRoutine(
-            child_id=child_id,
-            routine_name=routine_data.routine_name,
-            description=routine_data.description,
-            time_of_day=routine_data.time_of_day,
-            notes=routine_data.notes
-        )
-        db.add(routine)
+        routine = db.query(ChildRoutine).filter_by(child_id=child_id).first()
+        if not routine:
+            routine = ChildRoutine(child_id=child_id)
+            db.add(routine)
+        _apply_schema(routine, routine_data)
         db.commit()
         db.refresh(routine)
         return routine
@@ -349,13 +354,7 @@ class ChildService:
             personality = ChildPersonality(child_id=child_id)
             db.add(personality)
 
-        personality.temperament = personality_data.temperament
-        personality.communication_style = personality_data.communication_style
-        personality.social_skills = personality_data.social_skills
-        personality.strengths = personality_data.strengths
-        personality.comfort_objects = personality_data.comfort_objects
-        personality.preferred_activities = personality_data.preferred_activities
-
+        _apply_schema(personality, personality_data)
         db.commit()
         db.refresh(personality)
         return personality
@@ -371,16 +370,10 @@ class ChildService:
         food_profile = db.query(ChildFoodProfile).filter_by(
             child_id=child_id).first()
         if not food_profile:
-            food_profile = ChildFoodProfile(child_id=child_id)
+            food_profile = ChildFoodProfile(child_id=child_id, feeding_method="SOLID_FOODS")
             db.add(food_profile)
 
-        food_profile.foods_liked = food_data.foods_liked
-        food_profile.foods_disliked = food_data.foods_disliked
-        food_profile.dietary_restrictions = food_data.dietary_restrictions
-        food_profile.feeding_method = food_data.feeding_method
-        food_profile.bottle_preference = food_data.bottle_preference
-        food_profile.special_meals_provided = food_data.special_meals_provided
-
+        _apply_schema(food_profile, food_data)
         db.commit()
         db.refresh(food_profile)
         return food_profile
@@ -399,13 +392,7 @@ class ChildService:
             development = ChildDevelopment(child_id=child_id)
             db.add(development)
 
-        development.age_in_months = dev_data.age_in_months
-        development.walking_stage = dev_data.walking_stage
-        development.talking_stage = dev_data.talking_stage
-        development.eating_stage = dev_data.eating_stage
-        development.toileting_stage = dev_data.toileting_stage
-        development.notes = dev_data.notes
-
+        _apply_schema(development, dev_data)
         db.commit()
         db.refresh(development)
         return development
@@ -424,12 +411,7 @@ class ChildService:
             esp = EmotionalSupportPlan(child_id=child_id)
             db.add(esp)
 
-        esp.triggers = esp_data.triggers
-        esp.de_escalation_techniques = esp_data.de_escalation_techniques
-        esp.support_strategies = esp_data.support_strategies
-        esp.reward_preferences = esp_data.reward_preferences
-        esp.staff_notes = esp_data.staff_notes
-
+        _apply_schema(esp, esp_data)
         db.commit()
         db.refresh(esp)
         return esp

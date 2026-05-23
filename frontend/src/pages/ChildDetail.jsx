@@ -35,34 +35,41 @@ export default function ChildDetail() {
     const navigate = useNavigate()
     const { user } = useAuth()
     const [profile, setProfile] = useState(null)
-    const [file, setFile] = useState(null)
+    const [files, setFiles] = useState([])
     const [uploading, setUploading] = useState(false)
+    const [media, setMedia] = useState([])
     const [activeTab, setActiveTab] = useState('overview')
+
+    const fetchMedia = () =>
+        api.get(`/api/media/children/${id}`)
+            .then(r => setMedia(r.data.data || []))
+            .catch(() => {})
 
     useEffect(() => {
         api.get(`/api/children/${id}/profile`)
             .then(r => setProfile(r.data.data))
             .catch(() => navigate('/'))
+        fetchMedia()
     }, [id])
 
     async function handleUpload(e) {
         e.preventDefault()
-        if (!file) return
-        const fd = new FormData()
-        fd.append('file', file)
-        fd.append('filename', file.name)
-        fd.append('child_id', id)
+        if (!files.length) return
         setUploading(true)
         try {
-            await api.post('/api/media/upload-cloudinary', fd, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            })
-            const r = await api.get(`/api/children/${id}/profile`)
-            setProfile(r.data.data)
-            setFile(null)
-            alert('Uploaded successfully!')
+            for (const f of files) {
+                const fd = new FormData()
+                fd.append('file', f)
+                fd.append('filename', f.name)
+                fd.append('child_id', id)
+                await api.post('/api/media/upload-cloudinary', fd, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                })
+            }
+            setFiles([])
+            fetchMedia()
         } catch {
-            alert('Upload failed')
+            // silently fail individual uploads
         }
         setUploading(false)
     }
@@ -166,40 +173,59 @@ export default function ChildDetail() {
                             <Field label="Gender" value={profile.gender} />
                             <Field label="Room / Class" value={profile.room_name} />
                             <Field label="Enrollment Date" value={profile.enrollment_date} />
-                            <Field label="Home Language" value={profile.home_language} />
-                            <Field label="Religion" value={profile.religion} />
-                            {profile.cultural_notes && <Field label="Cultural Notes" value={profile.cultural_notes} />}
+                            <Field label="Registration No." value={profile.registration_number} />
                         </Section>
 
                         <Section icon="🧠" title="Personality">
                             {profile.personality ? (
                                 <>
-                                    <Field label="Temperament" value={profile.personality.temperament} />
+                                    <Field label="Temperament Notes" value={profile.personality.temperament_notes} />
                                     <Field label="Social Style" value={profile.personality.social_style} />
                                     <Field label="Learning Style" value={profile.personality.learning_style} />
-                                    <Field label="Notes" value={profile.personality.notes} />
+                                    <Field label="Favourite Activities" value={profile.personality.favorite_activities} />
+                                    <Field label="Favourite Toys" value={profile.personality.favorite_toys} />
+                                    <Field label="Comfort Objects" value={profile.personality.comfort_objects} />
+                                    <Field label="Dislikes" value={profile.personality.dislikes} />
+                                    <Field label="Things That Calm" value={profile.personality.things_that_calm_them} />
+                                    <Field label="Things That Excite" value={profile.personality.things_that_excite_them} />
                                 </>
                             ) : <Empty text="No personality profile added yet" />}
                         </Section>
 
                         <Section icon="😰" title="Fears">
                             {profile.fears?.length ? (
-                                <div>{profile.fears.map((f, i) => <Tag key={i} label={f.fear || f.description} color="#fef2f2" textColor="#dc2626" />)}</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {profile.fears.map((f, i) => (
+                                        <div key={i} style={{ background: '#fef2f2', borderRadius: 10, padding: '0.6rem 0.9rem', border: '1px solid #fecaca' }}>
+                                            <div style={{ fontWeight: 700, color: '#dc2626', fontSize: '0.88rem' }}>{f.fear_description}</div>
+                                            {f.severity && <div style={{ fontSize: '0.75rem', color: '#ef4444' }}>Severity: {f.severity}</div>}
+                                            {f.triggers && <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>Triggers: {f.triggers}</div>}
+                                            {f.coping_strategy && <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>Coping: {f.coping_strategy}</div>}
+                                        </div>
+                                    ))}
+                                </div>
                             ) : <Empty text="No fears recorded" />}
                         </Section>
 
                         <Section icon="⭐" title="Interests">
                             {profile.interests?.length ? (
-                                <div>{profile.interests.map((interest, i) => <Tag key={i} label={interest.interest || interest.description} color="#eff6ff" textColor="#2563eb" />)}</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                    {profile.interests.map((interest, i) => (
+                                        <Tag key={i} label={interest.specific_interest} color="#eff6ff" textColor="#2563eb" />
+                                    ))}
+                                </div>
                             ) : <Empty text="No interests recorded" />}
                         </Section>
 
                         <Section icon="💙" title="Emotional Support Plan">
                             {profile.emotional_support_plan ? (
                                 <>
-                                    <Field label="Triggers" value={profile.emotional_support_plan.triggers} />
-                                    <Field label="Calming Strategies" value={profile.emotional_support_plan.calming_strategies} />
-                                    <Field label="Notes" value={profile.emotional_support_plan.notes} />
+                                    <Field label="Separation Anxiety" value={profile.emotional_support_plan.separation_anxiety_notes} />
+                                    <Field label="Calming Techniques" value={profile.emotional_support_plan.calming_techniques} />
+                                    <Field label="Triggers to Avoid" value={profile.emotional_support_plan.triggers_to_avoid} />
+                                    <Field label="Positive Reinforcements" value={profile.emotional_support_plan.positive_reinforcements} />
+                                    <Field label="Behavioural Notes" value={profile.emotional_support_plan.behavioral_notes} />
+                                    <Field label="Staff Guidance" value={profile.emotional_support_plan.staff_guidance} />
                                 </>
                             ) : <Empty text="No emotional support plan added" />}
                         </Section>
@@ -207,10 +233,13 @@ export default function ChildDetail() {
                         <Section icon="📈" title="Development">
                             {profile.development ? (
                                 <>
-                                    <Field label="Motor Skills" value={profile.development.motor_skills} />
-                                    <Field label="Language Skills" value={profile.development.language_skills} />
-                                    <Field label="Social Skills" value={profile.development.social_skills} />
-                                    <Field label="Notes" value={profile.development.notes} />
+                                    <Field label="Walking Stage" value={profile.development.walking_stage} />
+                                    <Field label="Talking Stage" value={profile.development.talking_stage} />
+                                    <Field label="Feeding Stage" value={profile.development.feeding_stage} />
+                                    <Field label="Toilet Stage" value={profile.development.toilet_stage} />
+                                    <Field label="Milestones Achieved" value={profile.development.milestones_achieved} />
+                                    <Field label="Areas to Support" value={profile.development.areas_to_support} />
+                                    <Field label="Staff Observations" value={profile.development.staff_observations} />
                                 </>
                             ) : <Empty text="No development profile added" />}
                         </Section>
@@ -255,12 +284,16 @@ export default function ChildDetail() {
                         <Section icon="😴" title="Daily Routines">
                             {profile.routines ? (
                                 <>
-                                    <Field label="Wake Time" value={profile.routines.wake_time} />
-                                    <Field label="Nap Time" value={profile.routines.nap_time} />
-                                    <Field label="Nap Duration" value={profile.routines.nap_duration} />
-                                    <Field label="Bedtime" value={profile.routines.bedtime} />
-                                    <Field label="Meal Times" value={profile.routines.meal_times} />
-                                    <Field label="Notes" value={profile.routines.notes} />
+                                    <Field label="Wake Time" value={profile.routines.usual_wake_time} />
+                                    <Field label="Sleep Time" value={profile.routines.usual_sleep_time} />
+                                    <Field label="Nap Duration (mins)" value={profile.routines.nap_duration_minutes} />
+                                    <Field label="Nap Preferences" value={profile.routines.nap_preferences} />
+                                    <Field label="Bedtime Rituals" value={profile.routines.bedtime_rituals} />
+                                    <Field label="Morning Mood" value={profile.routines.morning_mood} />
+                                    <Field label="Potty Training" value={profile.routines.potty_training_stage} />
+                                    <Field label="Uses Pacifier" value={profile.routines.uses_pacifier ? 'Yes' : 'No'} />
+                                    <Field label="Comfort Blanket" value={profile.routines.uses_comfort_blanket ? `Yes${profile.routines.comfort_blanket_desc ? ` — ${profile.routines.comfort_blanket_desc}` : ''}` : 'No'} />
+                                    {profile.routines.special_routines && <Field label="Special Routines" value={profile.routines.special_routines} />}
                                 </>
                             ) : <Empty text="No routine information added" />}
                         </Section>
@@ -306,38 +339,51 @@ export default function ChildDetail() {
                 {activeTab === 'media' && isAdminOrStaff && (
                     <div style={{ display: 'grid', gap: '1rem' }}>
                         <Section icon="📸" title="Media Gallery">
-                            {!profile.media || profile.media.length === 0 ? (
+                            {media.length === 0 ? (
                                 <Empty text="No media uploaded yet" />
                             ) : (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-                                    {profile.media.map(m => (
-                                        <img key={m.id} src={m.url} alt="media"
-                                            style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10, border: '1px solid #f0f0f0' }}
-                                        />
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+                                    {media.map(m => (
+                                        m.media_type === 'VIDEO' ? (
+                                            <video key={m.id} src={m.url} controls
+                                                style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10, border: '1px solid #f0f0f0' }}
+                                            />
+                                        ) : (
+                                            <img key={m.id} src={m.url} alt={m.caption || 'photo'}
+                                                style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10, border: '1px solid #f0f0f0', cursor: 'pointer' }}
+                                                onClick={() => window.open(m.url, '_blank')}
+                                            />
+                                        )
                                     ))}
                                 </div>
                             )}
                         </Section>
 
-                        <Section icon="⬆️" title="Upload Media">
+                        <Section icon="⬆️" title="Upload Photos / Videos">
                             <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                 <input
                                     type="file"
                                     accept="image/*,video/*"
-                                    onChange={e => setFile(e.target.files[0])}
+                                    multiple
+                                    onChange={e => setFiles(Array.from(e.target.files))}
                                     style={{ fontSize: '0.85rem' }}
                                 />
+                                {files.length > 0 && (
+                                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                                        {files.length} file{files.length > 1 ? 's' : ''} selected
+                                    </div>
+                                )}
                                 <button
                                     type="submit"
-                                    disabled={uploading || !file}
+                                    disabled={uploading || !files.length}
                                     style={{
-                                        background: uploading ? '#9ca3af' : '#10b981',
+                                        background: uploading || !files.length ? '#9ca3af' : '#10b981',
                                         color: '#fff', border: 'none', borderRadius: 8,
                                         padding: '0.6rem 1.2rem', cursor: uploading ? 'not-allowed' : 'pointer',
                                         fontWeight: 600, fontSize: '0.85rem', width: 'fit-content'
                                     }}
                                 >
-                                    {uploading ? 'Uploading...' : 'Upload'}
+                                    {uploading ? 'Uploading...' : `Upload${files.length > 1 ? ` ${files.length} files` : ''}`}
                                 </button>
                             </form>
                         </Section>

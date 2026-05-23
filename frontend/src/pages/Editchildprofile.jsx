@@ -79,12 +79,15 @@ export default function EditChildProfile() {
         }).catch(() => navigate('/'))
     }, [id])
 
+    const cleanPayload = (obj) =>
+        Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, v === '' ? null : v]))
+
     const save = async (endpoint, data, method = 'put') => {
         setSaving(true)
         setSuccess(null)
         setError(null)
         try {
-            await api[method](endpoint, data)
+            await api[method](endpoint, cleanPayload(data))
             setSuccess('Saved successfully!')
             const r = await api.get(`/api/children/${id}/profile`)
             setProfile(r.data.data)
