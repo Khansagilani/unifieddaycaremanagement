@@ -56,6 +56,11 @@ with engine.connect() as conn:
     conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS utensils_preferred VARCHAR(255)"))
     conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS cup_type VARCHAR(100)"))
     conn.execute(text("ALTER TABLE media_posts ADD COLUMN IF NOT EXISTS daily_log_id UUID REFERENCES daily_logs(id)"))
+    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS link_type VARCHAR(100)"))
+    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS id_type VARCHAR(50)"))
+    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS id_number VARCHAR(100)"))
+    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS photo_url VARCHAR"))
+    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"))
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS staff_attendance (
             id UUID PRIMARY KEY,
