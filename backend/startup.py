@@ -4,17 +4,21 @@ from app.models.base import Center
 from app.models.user import User, UserRole
 from app.core.security import hash_password
 from sqlalchemy import text
+from alembic.config import Config
+from alembic import command
 import uuid
+import os
 
-# Create all ORM-mapped tables
-Base.metadata.create_all(bind=engine)
-print("Tables created!")
+# Run Alembic migrations
+alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
+command.upgrade(alembic_cfg, "head")
+print("Migrations applied!")
 
-# Create tables not represented by ORM models
+# Create raw SQL tables not managed by ORM
 with engine.connect() as conn:
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS notifications (
-            id UUID PRIMARY KEY,
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
             title VARCHAR(255) NOT NULL,
             message TEXT,
@@ -26,7 +30,7 @@ with engine.connect() as conn:
     """))
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS parent_link_requests (
-            id UUID PRIMARY KEY,
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             parent_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
             child_id UUID REFERENCES children(id) ON DELETE CASCADE NOT NULL,
             registration_number VARCHAR(100),
@@ -35,107 +39,6 @@ with engine.connect() as conn:
             updated_at TIMESTAMPTZ DEFAULT NOW()
         )
     """))
-    # users
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url VARCHAR"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(10) DEFAULT 'en'"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS push_notifications BOOLEAN DEFAULT TRUE"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255)"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMPTZ"))
-    # centers
-    conn.execute(text("ALTER TABLE centers ADD COLUMN IF NOT EXISTS operating_hours VARCHAR(255)"))
-    conn.execute(text("ALTER TABLE centers ADD COLUMN IF NOT EXISTS logo_url VARCHAR"))
-    # children
-    conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS registration_number VARCHAR(100)"))
-    conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS exit_date DATE"))
-    conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS home_language VARCHAR(100)"))
-    conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS religion VARCHAR(100)"))
-    conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS cultural_notes TEXT"))
-    # authorized_pickups
-    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS photo_url VARCHAR"))
-    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS link_type VARCHAR(100)"))
-    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS id_type VARCHAR(50)"))
-    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS id_number VARCHAR(100)"))
-    conn.execute(text("ALTER TABLE authorized_pickups ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"))
-    # emergency_contacts
-    conn.execute(text("ALTER TABLE emergency_contacts ADD COLUMN IF NOT EXISTS link_type VARCHAR(100)"))
-    conn.execute(text("ALTER TABLE emergency_contacts ADD COLUMN IF NOT EXISTS phone_secondary VARCHAR(50)"))
-    conn.execute(text("ALTER TABLE emergency_contacts ADD COLUMN IF NOT EXISTS contact_order INTEGER DEFAULT 1"))
-    # child_personalities
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS favorite_sports TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS favorite_books TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS favorite_songs TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS comfort_objects TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS dislikes TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS things_that_calm_them TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS things_that_excite_them TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS social_style TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS learning_style TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS temperament_notes TEXT"))
-    conn.execute(text("ALTER TABLE child_personalities ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
-    # emotional_support_plans
-    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS separation_anxiety_notes TEXT"))
-    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS calming_techniques TEXT"))
-    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS triggers_to_avoid TEXT"))
-    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS positive_reinforcements TEXT"))
-    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS behavioral_notes TEXT"))
-    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS staff_guidance TEXT"))
-    conn.execute(text("ALTER TABLE emotional_support_plans ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
-    # child_routines
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS usual_wake_time TIME"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS usual_sleep_time TIME"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS nap_duration_minutes INTEGER"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS nap_preferences TEXT"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS bedtime_rituals TEXT"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS morning_mood TEXT"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS uses_pacifier BOOLEAN DEFAULT FALSE"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS uses_comfort_blanket BOOLEAN DEFAULT FALSE"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS comfort_blanket_desc TEXT"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS special_routines TEXT"))
-    conn.execute(text("ALTER TABLE child_routines ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
-    # child_development
-    conn.execute(text("ALTER TABLE child_development ADD COLUMN IF NOT EXISTS milestones_achieved TEXT"))
-    conn.execute(text("ALTER TABLE child_development ADD COLUMN IF NOT EXISTS areas_to_support TEXT"))
-    conn.execute(text("ALTER TABLE child_development ADD COLUMN IF NOT EXISTS staff_observations TEXT"))
-    conn.execute(text("ALTER TABLE child_development ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
-    # child_food_profiles
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS bottle_size_ml INTEGER"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS formula_brand VARCHAR(255)"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS breast_milk_notes TEXT"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS feeds_per_day INTEGER"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS meal_schedule TEXT"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS self_feeds BOOLEAN DEFAULT FALSE"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS needs_help_feeding BOOLEAN DEFAULT TRUE"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS utensils_preferred VARCHAR(255)"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS cup_type VARCHAR(100)"))
-    conn.execute(text("ALTER TABLE child_food_profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ"))
-    # allergies
-    conn.execute(text("ALTER TABLE allergies ADD COLUMN IF NOT EXISTS reaction_symptoms TEXT"))
-    conn.execute(text("ALTER TABLE allergies ADD COLUMN IF NOT EXISTS medication_if_reaction TEXT"))
-    conn.execute(text("ALTER TABLE allergies ADD COLUMN IF NOT EXISTS epipen_required BOOLEAN DEFAULT FALSE"))
-    conn.execute(text("ALTER TABLE allergies ADD COLUMN IF NOT EXISTS epipen_location TEXT"))
-    conn.execute(text("ALTER TABLE allergies ADD COLUMN IF NOT EXISTS parent_notified_on_exposure BOOLEAN DEFAULT TRUE"))
-    conn.execute(text("ALTER TABLE allergies ADD COLUMN IF NOT EXISTS diagnosed_date DATE"))
-    # daily_logs
-    conn.execute(text("ALTER TABLE daily_logs ADD COLUMN IF NOT EXISTS overall_notes TEXT"))
-    conn.execute(text("ALTER TABLE daily_logs ADD COLUMN IF NOT EXISTS had_good_day BOOLEAN DEFAULT TRUE"))
-    # media_posts
-    conn.execute(text("ALTER TABLE media_posts ADD COLUMN IF NOT EXISTS daily_log_id UUID REFERENCES daily_logs(id)"))
-    conn.execute(text("ALTER TABLE media_posts ADD COLUMN IF NOT EXISTS thumbnail_url VARCHAR"))
-    conn.execute(text("ALTER TABLE media_posts ADD COLUMN IF NOT EXISTS visible_to_parents BOOLEAN DEFAULT TRUE"))
-    # attendance
-    conn.execute(text("ALTER TABLE attendance ADD COLUMN IF NOT EXISTS checkin_by VARCHAR(255)"))
-    conn.execute(text("ALTER TABLE attendance ADD COLUMN IF NOT EXISTS checkout_by VARCHAR(255)"))
-    conn.execute(text("ALTER TABLE attendance ADD COLUMN IF NOT EXISTS late_pickup_alert BOOLEAN DEFAULT FALSE"))
-    conn.execute(text("ALTER TABLE attendance ADD COLUMN IF NOT EXISTS notes TEXT"))
-    # messages
-    conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_url VARCHAR"))
-    conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_announcement BOOLEAN DEFAULT FALSE"))
-    conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE"))
-    # invoices
-    conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_month VARCHAR(20)"))
-    conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_year INTEGER"))
-    conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT"))
-    conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ"))
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS staff_attendance (
             id UUID PRIMARY KEY,
@@ -151,7 +54,7 @@ with engine.connect() as conn:
     conn.commit()
 print("Extra tables ensured!")
 
-# Create admin only if doesn't exist
+# Create default admin if not exists
 db = SessionLocal()
 existing = db.query(User).filter(User.email == "admin@nestcare.com").first()
 if not existing:
