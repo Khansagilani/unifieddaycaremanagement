@@ -26,7 +26,7 @@ def upgrade() -> None:
                existing_type=sa.VARCHAR(length=20),
                type_=sa.String(length=100),
                existing_nullable=True)
-    op.drop_constraint(op.f('children_registration_number_key'), 'children', type_='unique')
+    op.execute('ALTER TABLE children DROP CONSTRAINT IF EXISTS children_registration_number_key')
     op.drop_column('emergency_contacts', 'relationship')
     op.alter_column('parent_child', 'status',
                existing_type=sa.VARCHAR(length=20),
