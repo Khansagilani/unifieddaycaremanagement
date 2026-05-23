@@ -37,6 +37,7 @@ with engine.connect() as conn:
     """))
     conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_month VARCHAR(20)"))
     conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_year INTEGER"))
+    conn.execute(text("ALTER TABLE children ADD COLUMN IF NOT EXISTS registration_number VARCHAR(100)"))
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS staff_attendance (
             id UUID PRIMARY KEY,
