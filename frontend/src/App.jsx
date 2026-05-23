@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import axios from 'axios'
 import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -34,6 +36,11 @@ function PublicOrDashboard({ role, children }) {
 }
 
 export default function App() {
+    useEffect(() => {
+        const url = import.meta.env.VITE_API_URL || 'http://localhost:8001'
+        axios.get(`${url}/api/health`, { timeout: 60000 }).catch(() => {})
+    }, [])
+
     return (
         <ErrorBoundary>
             <Routes>
