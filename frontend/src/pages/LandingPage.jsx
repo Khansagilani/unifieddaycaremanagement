@@ -131,8 +131,8 @@ export default function LandingPage({ role = 'parent' }) {
                     <Link className="rounded-full px-3 py-2 text-slate-600 hover:bg-white hover:text-slate-950" to="/admin">
                         Admin
                     </Link>
-                    <Link className="rounded-full px-3 py-2 text-slate-600 hover:bg-white hover:text-slate-950" to="/staff">
-                        Staff
+                    <Link className="rounded-full bg-white px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" to="/login?role=staff">
+                        Staff Login
                     </Link>
                 </nav>
             </header>

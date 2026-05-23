@@ -5,7 +5,7 @@ import NotificationBell from '../components/NotificationBell'
 import useAuth from '../hooks/useAuth'
 
 export default function AdminDashboard() {
-    const [stats, setStats] = useState({ children: 0, invoices: 0, feePlans: 0 })
+    const [stats, setStats] = useState({ children: 0, invoices: 0, feePlans: 0, staffPresent: 0, staffTotal: 0 })
     const [pendingRequests, setPendingRequests] = useState([])
     const [approvingId, setApprovingId] = useState(null)
     const [rejectingId, setRejectingId] = useState(null)
@@ -22,15 +22,18 @@ export default function AdminDashboard() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const [childrenRes, invoicesRes, feePlansRes] = await Promise.all([
+                const [childrenRes, invoicesRes, feePlansRes, staffRes] = await Promise.all([
                     api.get('/api/children'),
                     api.get('/api/billing/invoices'),
-                    api.get('/api/billing/fee-plans')
+                    api.get('/api/billing/fee-plans'),
+                    api.get('/api/admin/staff-attendance/today').catch(() => ({ data: { data: { present: 0, total: 0 } } }))
                 ])
                 setStats({
                     children: childrenRes.data.total || childrenRes.data.data?.length || 0,
                     invoices: invoicesRes.data.data?.length || 0,
-                    feePlans: feePlansRes.data.data?.length || 0
+                    feePlans: feePlansRes.data.data?.length || 0,
+                    staffPresent: staffRes.data.data?.present || 0,
+                    staffTotal: staffRes.data.data?.total || 0,
                 })
             } catch (err) {
                 console.error('Unable to load admin dashboard stats', err)
@@ -111,6 +114,7 @@ export default function AdminDashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                     {[
                         { label: 'Active Children', value: stats.children, color: '#3b82f6', bg: '#eff6ff', icon: '👶' },
+                        { label: 'Staff Present Today', value: `${stats.staffPresent}/${stats.staffTotal}`, color: '#0d9488', bg: '#f0fdfa', icon: '👥' },
                         { label: 'Outstanding Invoices', value: stats.invoices, color: '#10b981', bg: '#f0fdf4', icon: '📄' },
                         { label: 'Fee Plans', value: stats.feePlans, color: '#8b5cf6', bg: '#f5f3ff', icon: '💳' },
                     ].map(s => (
@@ -171,6 +175,7 @@ export default function AdminDashboard() {
                         { to: '/admin/reports', icon: '📊', title: 'Reports & Analytics', desc: 'View enrollment statistics, revenue tracking, and center performance metrics.' },
                         { to: '/invoices', icon: '📄', title: 'Invoices', desc: 'Review all invoices and follow payment status for families.' },
                         { to: '/admin/link-requests', icon: '🔗', title: 'Parent Link Requests', desc: 'Approve or reject parent requests to be linked to children.' },
+                        { to: '/admin/staff-attendance', icon: '🕐', title: 'Staff Attendance', desc: 'Monthly attendance calendar — present and absent days per staff member.' },
                         { to: '/notifications', icon: '🔔', title: 'Notifications', desc: 'View all notifications and updates from parents and staff.' },
                         { to: '/children', icon: '📋', title: 'Children Directory', desc: 'Browse the full roster and drill into individual child records.' },
                     ].map(item => (

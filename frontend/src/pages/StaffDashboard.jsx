@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import useAuth from '../hooks/useAuth'
@@ -7,9 +7,18 @@ export default function StaffDashboard() {
     const [children, setChildren] = useState([])
     const [stats, setStats] = useState({ total: 0, checkedIn: 0, logs: 0 })
     const [loading, setLoading] = useState(true)
+    const [attendance, setAttendance] = useState({ status: null, checked_in_at: null, checked_out_at: null })
+    const [attLoading, setAttLoading] = useState(false)
     const { user, logout } = useAuth()
     const navigate = useNavigate()
     const today = new Date().toISOString().split('T')[0]
+
+    const fetchAttendance = async () => {
+        try {
+            const r = await api.get('/api/staff/attendance/me')
+            setAttendance(r.data.data || {})
+        } catch { }
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,9 +44,34 @@ export default function StaffDashboard() {
             setLoading(false)
         }
         fetchData()
+        fetchAttendance()
     }, [])
 
+    const handleCheckIn = async () => {
+        setAttLoading(true)
+        try {
+            await api.post('/api/staff/checkin')
+            await fetchAttendance()
+        } catch (err) {
+            alert(err.response?.data?.detail || 'Check-in failed')
+        }
+        setAttLoading(false)
+    }
+
+    const handleCheckOut = async () => {
+        setAttLoading(true)
+        try {
+            await api.post('/api/staff/checkout')
+            await fetchAttendance()
+        } catch (err) {
+            alert(err.response?.data?.detail || 'Check-out failed')
+        }
+        setAttLoading(false)
+    }
+
     const handleLogout = () => { logout(); navigate('/') }
+
+    const fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null
 
     const greet = () => {
         const h = new Date().getHours()
@@ -80,6 +114,42 @@ export default function StaffDashboard() {
                 <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '0.9rem' }}>
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
+
+                {/* Attendance Check-In Card */}
+                {(() => {
+                    const isCheckedIn = !!attendance.checked_in_at
+                    const isCheckedOut = !!attendance.checked_out_at
+                    const borderColor = isCheckedOut ? '#bbf7d0' : isCheckedIn ? '#bfdbfe' : '#e5e7eb'
+                    const bgColor = isCheckedOut ? '#f0fdf4' : isCheckedIn ? '#eff6ff' : '#fff'
+                    return (
+                        <div style={{ background: bgColor, borderRadius: 16, padding: '1.2rem 1.5rem', border: `1.5px solid ${borderColor}`, marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                            <div>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#1a1a2e' }}>
+                                    {isCheckedOut ? 'Day complete' : isCheckedIn ? 'Checked in' : 'Not checked in yet'}
+                                </div>
+                                <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: 4 }}>
+                                    {isCheckedIn && `Arrived ${fmtTime(attendance.checked_in_at)}`}
+                                    {isCheckedOut && ` · Left ${fmtTime(attendance.checked_out_at)}`}
+                                    {!isCheckedIn && 'Tap Check In to record your arrival — time is set automatically.'}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                {!isCheckedIn && (
+                                    <button onClick={handleCheckIn} disabled={attLoading}
+                                        style={{ background: attLoading ? '#9ca3af' : 'linear-gradient(135deg, #0d9488, #14b8a6)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 22px', fontWeight: 800, fontSize: '0.9rem', cursor: attLoading ? 'not-allowed' : 'pointer' }}>
+                                        {attLoading ? '...' : 'Check In'}
+                                    </button>
+                                )}
+                                {isCheckedIn && !isCheckedOut && (
+                                    <button onClick={handleCheckOut} disabled={attLoading}
+                                        style={{ background: attLoading ? '#9ca3af' : '#fff', color: '#0d9488', border: '2px solid #0d9488', borderRadius: 10, padding: '10px 22px', fontWeight: 800, fontSize: '0.9rem', cursor: attLoading ? 'not-allowed' : 'pointer' }}>
+                                        {attLoading ? '...' : 'Check Out'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )
+                })()}
 
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>

@@ -37,6 +37,18 @@ with engine.connect() as conn:
     """))
     conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_month VARCHAR(20)"))
     conn.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_year INTEGER"))
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS staff_attendance (
+            id UUID PRIMARY KEY,
+            staff_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+            center_id UUID REFERENCES centers(id) ON DELETE CASCADE NOT NULL,
+            date DATE NOT NULL,
+            checked_in_at TIMESTAMPTZ,
+            checked_out_at TIMESTAMPTZ,
+            status VARCHAR(20) DEFAULT 'PRESENT',
+            UNIQUE(staff_id, date)
+        )
+    """))
     conn.commit()
 print("Extra tables ensured!")
 

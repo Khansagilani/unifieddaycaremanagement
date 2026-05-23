@@ -1,4 +1,3 @@
-import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
@@ -24,6 +23,7 @@ import useAuth from './hooks/useAuth'
 import EditChildProfile from './pages/EditChildProfile'
 import ParentRegister from './pages/ParentRegister'
 import AdminLinkRequests from './pages/AdminLinkRequests'
+import AdminStaffAttendance from './pages/AdminStaffAttendance'
 import NotificationsPage from './pages/NotificationsPage'
 
 function PublicOrDashboard({ role, children }) {
@@ -60,6 +60,7 @@ export default function App() {
                 <Route path="/admin/reports" element={<ProtectedRoute role="ADMIN"><AdminReports /></ProtectedRoute>} />
                 <Route path="/admin/invoices" element={<ProtectedRoute role="ADMIN"><AdminInvoices /></ProtectedRoute>} />
                 <Route path="/admin/link-requests" element={<ProtectedRoute role="ADMIN"><AdminLinkRequests /></ProtectedRoute>} />
+                <Route path="/admin/staff-attendance" element={<ProtectedRoute role="ADMIN"><AdminStaffAttendance /></ProtectedRoute>} />
 
                 {/* Shared Routes */}
                 <Route path="/children" element={<ProtectedRoute role={["STAFF", "PARENT", "ADMIN"]}><ChildrenList /></ProtectedRoute>} />

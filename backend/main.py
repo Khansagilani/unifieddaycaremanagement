@@ -8,6 +8,7 @@ from app.routers import health_and_daily
 from app.routers import media_messaging_billing
 import startup
 from app.routers.parent_routes import router as parent_router
+from app.routers.staff_attendance import router as staff_attendance_router
 
 
 # Create FastAPI app
@@ -42,6 +43,7 @@ app.include_router(media_messaging_billing.msg_router)
 app.include_router(media_messaging_billing.billing_router)
 app.include_router(ws.router)
 app.include_router(parent_router)
+app.include_router(staff_attendance_router)
 
 # Health check endpoint
 
