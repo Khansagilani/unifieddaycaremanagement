@@ -62,7 +62,7 @@ export default function App() {
                 <Route path="/login" element={<LoginGuard><Login /></LoginGuard>} />
 
                 {/* Secret admin login — not linked from anywhere public */}
-                <Route path="/nestcare-admin-portal" element={<AdminLogin />} />
+                <Route path="/nestcare-admin-portal-10863" element={<AdminLogin />} />
 
                 {/* Parent register */}
                 <Route path="/register" element={<ParentRegister />} />
