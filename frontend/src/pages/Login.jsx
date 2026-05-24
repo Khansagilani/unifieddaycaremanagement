@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { login } from '../api/auth'
 import useAuth from '../hooks/useAuth'
+import { Logo } from '../components/SiteHeader'
 
 const roleThemes = {
     parent: {
@@ -14,17 +15,6 @@ const roleThemes = {
         ring: 'ring-emerald-100',
         home: '/',
         highlights: ['Daily moments', 'Care team messages', 'Invoices'],
-    },
-    admin: {
-        label: 'Admin',
-        eyebrow: 'Center command',
-        title: 'Run NestCare with clarity.',
-        text: 'Open your dashboard for children, staff, billing, reports, and center-wide activity.',
-        accent: 'from-teal-500 to-indigo-500',
-        soft: 'bg-indigo-50',
-        ring: 'ring-indigo-100',
-        home: '/admin',
-        highlights: ['Children and staff', 'Reports', 'Billing control'],
     },
     staff: {
         label: 'Staff',
@@ -44,6 +34,7 @@ export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState(null)
+    const [loading, setLoading] = useState(false)
     const [selectedRole, setSelectedRole] = useState(() => {
         const role = new URLSearchParams(location.search).get('role')?.toLowerCase()
         return roleThemes[role] ? role : 'parent'
@@ -54,6 +45,7 @@ export default function Login() {
     async function handleSubmit(e) {
         e.preventDefault()
         setError(null)
+        setLoading(true)
         try {
             const res = await login(email, password)
             const token = res.data.data.access_token
@@ -62,35 +54,40 @@ export default function Login() {
 
             if (!token || !user) {
                 setError('Invalid response from server')
+                setLoading(false)
+                return
+            }
+
+            if (user.role === 'ADMIN') {
+                setError('Admin accounts must use the admin portal to sign in.')
+                setLoading(false)
                 return
             }
 
             if (user.role !== selectedRole.toUpperCase()) {
                 setError(`This is a ${user.role.toLowerCase()} account. Please choose the ${user.role.toLowerCase()} portal to sign in.`)
+                setLoading(false)
                 return
             }
 
             localStorage.setItem('refresh_token', refreshToken)
             useAuth.getState().loginLocal(token, user)
 
-            if (user.role === 'ADMIN') navigate('/admin')
-            else if (user.role === 'STAFF') navigate('/staff')
+            if (user.role === 'STAFF') navigate('/staff')
             else if (user.role === 'PARENT') navigate('/parent')
             else navigate('/')
         } catch (err) {
             setError(err.response?.data?.detail || 'Login failed')
         }
+        setLoading(false)
     }
 
     return (
         <div className="min-h-screen bg-[#f7faf8] text-slate-950">
             <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-                <Link to="/" className="flex items-center gap-3">
-                    <span className={`h-10 w-10 rounded-2xl bg-gradient-to-br ${theme.accent} shadow-lg shadow-slate-300`} />
-                    <span className="text-lg font-black tracking-tight">NestCare</span>
-                </Link>
-                <Link to={theme.home} className="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200">
-                    Back to website
+                <Logo size={40} />
+                <Link to="/" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200">
+                    ← Back to website
                 </Link>
             </header>
 
@@ -113,6 +110,12 @@ export default function Login() {
                             </div>
                         ))}
                     </div>
+                    <p className="mt-8 text-sm text-slate-400">
+                        New parent?{' '}
+                        <Link to="/register" className="font-bold text-emerald-600 hover:underline">
+                            Register your account here
+                        </Link>
+                    </p>
                 </section>
 
                 <section className="rounded-[2rem] bg-white p-5 shadow-2xl shadow-slate-200/80 ring-1 ring-black/5 sm:p-7">
@@ -121,7 +124,8 @@ export default function Login() {
                         <h2 className="mt-2 text-3xl font-black">NestCare {theme.label}</h2>
                     </div>
 
-                    <div className="mb-6 grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
+                    {/* Role selector — Parent and Staff only */}
+                    <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
                         {Object.entries(roleThemes).map(([key, role]) => (
                             <button
                                 key={key}
@@ -149,6 +153,7 @@ export default function Login() {
                             placeholder={`${theme.label.toLowerCase()}@nestcare.com`}
                             value={email}
                             onChange={e => setEmail(e.target.value)}
+                            required
                         />
 
                         <label className="mb-2 block text-sm font-black text-slate-700">Password</label>
@@ -159,10 +164,14 @@ export default function Login() {
                             placeholder="Enter your password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
+                            required
                         />
 
-                        <button className={`w-full rounded-2xl bg-gradient-to-r ${theme.accent} px-5 py-3 font-black text-white shadow-xl shadow-slate-200 transition hover:-translate-y-0.5`}>
-                            Sign in as {theme.label}
+                        <button
+                            disabled={loading}
+                            className={`w-full rounded-2xl bg-gradient-to-r ${theme.accent} px-5 py-3 font-black text-white shadow-xl shadow-slate-200 transition hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0`}
+                        >
+                            {loading ? 'Signing in...' : `Sign in as ${theme.label}`}
                         </button>
                     </form>
                 </section>

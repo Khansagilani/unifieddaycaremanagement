@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import axios from 'axios'
 import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
+import AdminLogin from './pages/AdminLogin'
 import ProtectedRoute from './components/ProtectedRoute'
 import ChildrenList from './pages/ChildrenList'
 import ChildDetail from './pages/ChildDetail'
@@ -28,9 +29,19 @@ import AdminLinkRequests from './pages/AdminLinkRequests'
 import AdminStaffAttendance from './pages/AdminStaffAttendance'
 import NotificationsPage from './pages/NotificationsPage'
 
-function PublicOrDashboard({ role, children }) {
+// Redirect logged-in users to their dashboard, otherwise show login
+function LoginGuard({ children }) {
     const { user } = useAuth()
-    if (!user) return <LandingPage role={role.toLowerCase()} />
+    if (user?.role === 'ADMIN') return <Navigate to="/admin" replace />
+    if (user?.role === 'STAFF') return <Navigate to="/staff" replace />
+    if (user?.role === 'PARENT') return <Navigate to="/parent" replace />
+    return children
+}
+
+// Show role dashboard if logged in and correct role, otherwise show login
+function PortalGuard({ role, children }) {
+    const { user } = useAuth()
+    if (!user) return children   // e.g. staff login page shown
     if (user.role !== role) return <Navigate to="/" replace />
     return children
 }
@@ -44,23 +55,31 @@ export default function App() {
     return (
         <ErrorBoundary>
             <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/" element={<LandingPage role="parent" />} />
-                <Route path="/parents" element={<LandingPage role="parent" />} />
+                {/* Public landing page */}
+                <Route path="/" element={<LandingPage />} />
+
+                {/* Public login — Parent & Staff only */}
+                <Route path="/login" element={<LoginGuard><Login /></LoginGuard>} />
+
+                {/* Secret admin login — not linked from anywhere public */}
+                <Route path="/nestcare-admin-portal" element={<AdminLogin />} />
+
+                {/* Parent register */}
+                <Route path="/register" element={<ParentRegister />} />
 
                 {/* Staff Routes */}
-                <Route path="/staff" element={<PublicOrDashboard role="STAFF"><StaffDashboard /></PublicOrDashboard>} />
+                <Route path="/staff" element={<PortalGuard role="STAFF"><StaffDashboard /></PortalGuard>} />
                 <Route path="/staff/attendance" element={<ProtectedRoute role="STAFF"><Attendance /></ProtectedRoute>} />
                 <Route path="/staff/daily-log" element={<ProtectedRoute role="STAFF"><DailyLog /></ProtectedRoute>} />
                 <Route path="/staff/messages" element={<ProtectedRoute role="STAFF"><StaffMessages /></ProtectedRoute>} />
 
                 {/* Parent Routes */}
-                <Route path="/parent" element={<PublicOrDashboard role="PARENT"><ParentDashboard /></PublicOrDashboard>} />
+                <Route path="/parent" element={<PortalGuard role="PARENT"><ParentDashboard /></PortalGuard>} />
                 <Route path="/parent/feed" element={<ProtectedRoute role="PARENT"><ChildFeed /></ProtectedRoute>} />
                 <Route path="/parent/messages" element={<ProtectedRoute role="PARENT"><ParentMessages /></ProtectedRoute>} />
 
-                {/* Admin Routes */}
-                <Route path="/admin" element={<PublicOrDashboard role="ADMIN"><AdminDashboard /></PublicOrDashboard>} />
+                {/* Admin Routes — protected, only reachable after admin login */}
+                <Route path="/admin" element={<ProtectedRoute role="ADMIN"><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/admin/children" element={<ProtectedRoute role="ADMIN"><AdminChildren /></ProtectedRoute>} />
                 <Route path="/admin/fee-plans" element={<ProtectedRoute role="ADMIN"><AdminFeePlans /></ProtectedRoute>} />
                 <Route path="/admin/staff" element={<ProtectedRoute role="ADMIN"><AdminStaff /></ProtectedRoute>} />
@@ -75,14 +94,11 @@ export default function App() {
                 <Route path="/children/:id/edit" element={<ProtectedRoute role={["ADMIN", "PARENT", "STAFF"]}><EditChildProfile /></ProtectedRoute>} />
                 <Route path="/invoices" element={<ProtectedRoute role={["ADMIN", "PARENT"]}><AdminInvoices /></ProtectedRoute>} />
                 <Route path="/invoices/:id/pay" element={<ProtectedRoute role={["ADMIN", "PARENT"]}><InvoicePay /></ProtectedRoute>} />
-                <Route path="/register" element={<ParentRegister />} />
                 <Route path="/notifications" element={<ProtectedRoute role={["ADMIN", "PARENT", "STAFF"]}><NotificationsPage /></ProtectedRoute>} />
 
+                {/* Catch-all */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </ErrorBoundary>
     )
 }
-
-
-

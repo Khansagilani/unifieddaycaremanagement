@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from datetime import date
+import datetime
 from typing import Optional, List
 from uuid import UUID
 from app.models.base import Child, AuthorizedPickup, EmergencyContact, ParentChild
@@ -30,6 +31,23 @@ def _apply_schema(orm_obj, schema_obj):
 
 
 class ChildService:
+
+    @staticmethod
+    def _generate_registration_number(db: Session, center_id: UUID) -> str:
+        year = datetime.date.today().year
+        prefix = f"NC-{year}-"
+        existing = db.query(Child).filter(
+            Child.center_id == center_id,
+            Child.registration_number.like(f"{prefix}%")
+        ).count()
+        # Keep incrementing until we find a unique number
+        sequence = existing + 1
+        while True:
+            candidate = f"{prefix}{str(sequence).zfill(5)}"
+            conflict = db.query(Child).filter(Child.registration_number == candidate).first()
+            if not conflict:
+                return candidate
+            sequence += 1
 
     @staticmethod
     def get_children(
@@ -62,6 +80,10 @@ class ChildService:
     @staticmethod
     def create_child(db: Session, center_id: UUID, child_data: ChildCreate) -> Child:
         """Create new child"""
+        reg_number = child_data.registration_number
+        if not reg_number:
+            reg_number = ChildService._generate_registration_number(db, center_id)
+
         child = Child(
             center_id=center_id,
             first_name=child_data.first_name,
@@ -71,7 +93,7 @@ class ChildService:
             room_name=child_data.room_name,
             status="ACTIVE",
             enrollment_date=child_data.enrollment_date or date.today(),
-            registration_number=child_data.registration_number,
+            registration_number=reg_number,
             photo_url=child_data.photo_url,
         )
         db.add(child)
